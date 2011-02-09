@@ -8,8 +8,8 @@ $dbname = 'phpsocks5';
 $secretkey = "gnuwisy78346g86s786d87f6782hjdkhkjchzxkjhkdjhdfhi2uq3yrsyidyfuishyidhyichyizxihyiuhyfiu89347979834ghe987t898d7uf897s89j";
 
 $dbprefix = 'phpsocks5_';
-$invstep = 100;
-$invmax = 3000;
+$invstep = 100000;
+$invmax = 3000000;
 
 $version = "01";
 
