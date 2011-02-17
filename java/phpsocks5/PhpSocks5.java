@@ -58,7 +58,10 @@ class Utils
 			InputStream err = hconn.getErrorStream();
 			byte[] buf = new byte[4096];
 			int len;
-			System.err.print("Exception in " + func + ": ");
+			System.err.print(new Date());
+			System.err.print("\tException in ");
+			System.err.print(func);
+			System.err.print(": ");
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();
 			try
 			{

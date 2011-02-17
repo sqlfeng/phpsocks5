@@ -27,11 +27,18 @@ function phpsocks5_decrypt($datastr)
 	return phpsocks5_encrypt($datastr);
 }
 
+function phpsocks5_log($message)
+{
+	global $dbprefix;
+	error_log(date(DATE_RFC1123) . "\t" . $message . "\n", 3, $dbprefix . "log.log");
+}
+
 function phpsocks5_http_500($errmsg)
 {
 	header('HTTP/1.1 500');
 	echo phpsocks5_encrypt($errmsg);
 	mysql_close();
+	phpsocks5_log("http_500_" . $errmsg);
 	exit;
 }
 
