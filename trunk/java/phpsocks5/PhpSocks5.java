@@ -46,6 +46,34 @@ class Utils
 		return b;
 	}
 
+	public static InputStream getURLInput(URLConnection conn, String func) throws IOException
+	{
+		try
+		{
+			return conn.getInputStream();
+		}
+		catch (IOException e)
+		{
+			HttpURLConnection hconn = (HttpURLConnection) conn;
+			InputStream err = hconn.getErrorStream();
+			byte[] buf = new byte[4096];
+			int len;
+			System.err.print("Exception in " + func + ": ");
+			ByteArrayOutputStream bout = new ByteArrayOutputStream();
+			try
+			{
+				while((len = err.read(buf)) > 0)
+					bout.write(buf, 0, len);
+			}
+			catch (Exception e1)
+			{}
+			buf = bout.toByteArray();
+			System.err.write(decrypt(buf));
+			System.err.println();
+			throw e;
+		}
+	}
+
 	public static void connect(PeerData peerData, String host, int port) throws MalformedURLException, IOException
 	{
 		byte[] header = (version + "1" + host + ":" + port).getBytes();
@@ -56,7 +84,7 @@ class Utils
 		out.write(encrypt(header));
 		out.flush();
 		peerData.cookieHandler.getCookie(conn);
-		conn.getInputStream();
+		getURLInput(conn, "connect");
 	}
 
 	public static void background(PeerData peerData) throws MalformedURLException, IOException
@@ -69,7 +97,7 @@ class Utils
 		OutputStream out = conn.getOutputStream();
 		out.write(encrypt(header));
 		out.flush();
-		InputStream in = conn.getInputStream();
+		InputStream in = getURLInput(conn, "background");
 		while((in.read()) >= 0);
 	}
 
@@ -89,7 +117,7 @@ class Utils
 		System.arraycopy(buf, 0, data, header.length, len);
 		out.write(encrypt(data));
 		out.flush();
-		conn.getInputStream();
+		getURLInput(conn, "send");
 	}
 
 	public static void receive(PeerData peerData, byte[] buf) throws MalformedURLException, IOException
@@ -102,7 +130,7 @@ class Utils
 		OutputStream out = conn.getOutputStream();
 		out.write(encrypt(header));
 		out.flush();
-		InputStream in = conn.getInputStream();
+		InputStream in = getURLInput(conn, "receive");
 		int len;
 		while((len = in.read(buf)) > 0)
 			peerData.peerOut.write(decrypt(buf), 0, len);
@@ -111,6 +139,12 @@ class Utils
 
 	public static void close(PeerData peerData) throws MalformedURLException, IOException
 	{
+		try
+		{
+			Thread.sleep(1000);
+		}
+		catch (InterruptedException e1)
+		{}
 		try
 		{
 			peerData.peerOut.close();
@@ -137,7 +171,7 @@ class Utils
 		OutputStream out = conn.getOutputStream();
 		out.write(encrypt(header));
 		out.flush();
-		conn.getInputStream();
+		getURLInput(conn, "close");
 	}
 
 }
@@ -212,7 +246,7 @@ class PeerSender implements Runnable
 		{}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		catch (InterruptedException e)
 		{}
@@ -254,7 +288,7 @@ class PeerReceiver implements Runnable
 		{}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		catch (InterruptedException e)
 		{}
@@ -373,14 +407,11 @@ public class PhpSocks5 implements Runnable
 		{
 			try
 			{
-				Thread.sleep(1000);
 				Utils.close(peerData);
 			}
 			catch (MalformedURLException e)
 			{}
 			catch (IOException e)
-			{}
-			catch (InterruptedException e)
 			{}
 		}
 
