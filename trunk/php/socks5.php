@@ -137,6 +137,7 @@ elseif($postdata[2] == "2")
 		phpsocks5_http_500('mysql_query SELECT error');
 	phpsocks5_log('background process 2');
 	$row = mysql_fetch_row($rslt);
+	phpsocks5_usleep(0);
 	if(!$row)
 		phpsocks5_http_500('mysql_fetch_row error');
 	phpsocks5_log('background process 3');
@@ -165,6 +166,7 @@ elseif($postdata[2] == "2")
 			phpsocks5_log('background process 10');
 			if(!mysql_query("INSERT INTO ${dbprefix}recving (sid, cnt) VALUES ('" . $phpsid . "', '" . base64_encode($cnt) . "')"))
 				phpsocks5_http_500('mysql_query INSERT error');
+			phpsocks5_usleep(0);
 			phpsocks5_log('background process 11');
 			$noop = false;
 		}
@@ -172,13 +174,17 @@ elseif($postdata[2] == "2")
 		phpsocks5_usleep($inv);
 		phpsocks5_log('background process 13');
 		$rslt = mysql_query("SELECT id, cnt FROM ${dbprefix}sending WHERE sid = '" . $phpsid . "' ORDER BY id ASC LIMIT 1");
+		if(!$rslt)
+			phpsocks5_http_500('mysql_query SELECT error');
 		$row = mysql_fetch_row($rslt);
+		phpsocks5_usleep(0);
 		phpsocks5_log('background process 14');
 		if($row)
 		{
 			$noop = false;
 			phpsocks5_log('background process 15');
 			mysql_query("DELETE FROM ${dbprefix}sending WHERE id = $row[0]");
+			phpsocks5_usleep(0);
 			phpsocks5_log('background process 16');
 			if(!$row[1])
 				phpsocks5_http_500('break');
@@ -223,10 +229,12 @@ elseif($postdata[2] == "4")
 			phpsocks5_http_500('mysql_query SELECT error');
 		phpsocks5_log('receive process 3');
 		$row = mysql_fetch_row($rslt);
+		phpsocks5_usleep(0);
 		if($row)
 		{
 			phpsocks5_log('receive process 4');
 			mysql_query("DELETE FROM ${dbprefix}recving WHERE id = $row[0]");
+			phpsocks5_usleep(0);
 			if($row[1])
 				echo phpsocks5_encrypt(base64_decode($row[1]));
 			else
