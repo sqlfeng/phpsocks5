@@ -58,6 +58,8 @@ function phpsocks5_usleep($usec)
 		phpsocks5_http_500('mysql_pconnect error');
 	if(!mysql_select_db($dbname))
 		phpsocks5_http_500('mysql_select_db error');
+	if(!mysql_query('SET AUTOCOMMIT=1'))
+		phpsocks5_http_500('mysql_query SET AUTOCOMMIT=1 error');
 	phpsocks5_log('sleep process 4');
 }
 
@@ -71,6 +73,8 @@ if(!mysql_pconnect("$dbhost:$dbport", $dbuser, $dbpass))
 	phpsocks5_http_500('mysql_pconnect error');
 if(!mysql_select_db($dbname))
 	phpsocks5_http_500('mysql_select_db error');
+if(!mysql_query('SET AUTOCOMMIT=1'))
+	phpsocks5_http_500('mysql_query SET AUTOCOMMIT=1 error');
 
 phpsocks5_log('process 3');
 
