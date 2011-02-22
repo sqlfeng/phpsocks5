@@ -221,6 +221,7 @@ class CookieHandler
 		{
 			sCookie = sCookie.substring(0, sCookie.length() - 2);
 			conn.setRequestProperty("Cookie", sCookie);
+			System.out.println("sCookie=" + sCookie);
 		}
 	}
 

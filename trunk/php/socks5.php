@@ -112,7 +112,7 @@ if($postdata[0] != $version[0] || $postdata[1] != $version[1])
 	phpsocks5_http_500('version not match');
 $phpsid = mysql_escape_string($_COOKIE['PHPSESSID']);
 
-phpsocks5_log('process 5');
+phpsocks5_log("process 5 $phpsid");
 
 if($postdata[2] == "1")
 {
@@ -263,7 +263,7 @@ elseif($postdata[2] == "5")
 	phpsocks5_log('close process 2');
 }
 
-phpsocks5_log('process 5');
+phpsocks5_log('process 6');
 
 mysql_close();
 ?>
