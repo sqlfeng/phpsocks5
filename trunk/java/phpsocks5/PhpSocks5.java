@@ -186,7 +186,9 @@ class CookieHandler
 
 	public void getCookie(URLConnection conn)
 	{
-		String[] setCookies = conn.getHeaderField("Set-Cookie").split("\\s*;\\s*");
+		String setCookie = conn.getHeaderField("Set-Cookie");
+		System.out.println("setCookie=" + setCookie);
+		String[] setCookies = setCookie.split("\\s*;\\s*");
 		for(int i = 0; i < setCookies.length; i++)
 		{
 			String[] cookie = setCookies[i].split("\\s*=\\s*");
