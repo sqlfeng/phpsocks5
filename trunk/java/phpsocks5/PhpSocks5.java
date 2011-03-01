@@ -136,7 +136,11 @@ class Utils
 		InputStream in = getURLInput(conn, "receive");
 		int len;
 		while((len = in.read(buf)) > 0)
+		{
 			peerData.peerOut.write(decrypt(buf), 0, len);
+			System.err.print("write:");
+			System.err.write(buf, 0, len);
+		}
 		peerData.peerOut.flush();
 	}
 
@@ -187,7 +191,9 @@ class CookieHandler
 	public void getCookie(URLConnection conn)
 	{
 		String setCookie = conn.getHeaderField("Set-Cookie");
-		System.out.println("setCookie=" + setCookie);
+		System.err.println("setCookie=" + setCookie);
+		if(setCookie == null)
+			return;
 		String[] setCookies = setCookie.split("\\s*;\\s*");
 		for(int i = 0; i < setCookies.length; i++)
 		{
@@ -223,7 +229,7 @@ class CookieHandler
 		{
 			sCookie = sCookie.substring(0, sCookie.length() - 2);
 			conn.setRequestProperty("Cookie", sCookie);
-			System.out.println("sCookie=" + sCookie);
+			System.err.println("sCookie=" + sCookie);
 		}
 	}
 
