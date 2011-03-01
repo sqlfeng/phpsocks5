@@ -46,6 +46,27 @@ class Utils
 		return b;
 	}
 
+	public static StringBuilder toHex(byte[] buf, int len, StringBuilder sb)
+	{
+		if(sb == null)
+			sb = new StringBuilder();
+		for(int i = 0; i < len; i++)
+		{
+			sb.append(' ');
+			sb.append(Integer.toHexString(buf[i]));
+		}
+		sb.append('(');
+		for(int i = 0; i < len; i++)
+		{
+			if(buf[i] < 32 || buf[i] > 126)
+				sb.append('.');
+			else
+				sb.append((char)buf[i]);
+		}
+		sb.append(')');
+		return sb;
+	}
+
 	public static InputStream getURLInput(URLConnection conn, String func) throws IOException
 	{
 		try
@@ -139,7 +160,7 @@ class Utils
 		{
 			peerData.peerOut.write(decrypt(buf), 0, len);
 			System.err.print("write:");
-			System.err.write(buf, 0, len);
+			System.err.println(toHex(buf, len, null).toString());
 		}
 		peerData.peerOut.flush();
 	}
@@ -150,7 +171,7 @@ class Utils
 		{
 			Thread.sleep(1000);
 		}
-		catch (InterruptedException e1)
+		catch (InterruptedException e)
 		{}
 		try
 		{
