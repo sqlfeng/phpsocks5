@@ -147,10 +147,10 @@ if($postdata[2] == "1")
 	mysql_query("DELETE FROM ${dbprefix}conning WHERE sid = '" . $phpsid . "'");
 	mysql_query("DELETE FROM ${dbprefix}sending WHERE sid = '" . $phpsid . "'");
 	mysql_query("DELETE FROM ${dbprefix}recving WHERE sid = '" . $phpsid . "'");
-	phpsocks5_log("connect process 4");
+	phpsocks5_log("connect process 4 $phpsid");
 	if(!mysql_query("INSERT INTO ${dbprefix}conning (sid, host, port) VALUES ('" . session_id() . "', '$host', '$port')"))
 		phpsocks5_http_500('mysql_query INSERT error');
-	phpsocks5_log("connect process 5");
+	phpsocks5_log("connect process 5 $phpsid");
 }
 elseif($postdata[2] == "2")
 {

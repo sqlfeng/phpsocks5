@@ -53,7 +53,7 @@ class Utils
 		for(int i = 0; i < len; i++)
 		{
 			sb.append(' ');
-			sb.append(Integer.toHexString(buf[i]));
+			sb.append(Integer.toHexString(buf[i] & 0xff));
 		}
 		sb.append('(');
 		for(int i = 0; i < len; i++)
