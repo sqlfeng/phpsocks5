@@ -139,6 +139,9 @@ class Utils
 		byte[] data = new byte[header.length + len];
 		System.arraycopy(header, 0, data, 0, header.length);
 		System.arraycopy(buf, 0, data, header.length, len);
+		System.err.print(peerData.peer.toString());
+		System.err.print(" send:");
+		System.err.println(toHex(data, data.length, null).toString());
 		out.write(encrypt(data));
 		out.flush();
 		getURLInput(conn, "send");
@@ -159,7 +162,8 @@ class Utils
 		while((len = in.read(buf)) > 0)
 		{
 			peerData.peerOut.write(decrypt(buf), 0, len);
-			System.err.print("write:");
+			System.err.print(peerData.peer.toString());
+			System.err.print(" receive:");
 			System.err.println(toHex(buf, len, null).toString());
 		}
 		peerData.peerOut.flush();
