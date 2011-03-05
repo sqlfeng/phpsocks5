@@ -24,7 +24,9 @@ class Utils
 
 	public static String serverurl;
 
-	public static String version = "01";
+	public static byte[] prepostfix;
+
+	public static String version = "02";
 
 	public static byte[] encrypt(byte[] data)
 	{
@@ -147,7 +149,23 @@ class Utils
 		getURLInput(conn, "send");
 	}
 
-	public static void receive(PeerData peerData, byte[] buf) throws MalformedURLException, IOException
+	public static int searchBytes(byte[] buf, byte[] search)
+	{
+		for(int i = 0; i < buf.length - search.length; i++)
+		{
+			int j = 0;
+			for(; j < search.length; j++)
+			{
+				if(buf[i + j] != search[j])
+					break;
+			}
+			if(j == search.length)
+				return i;
+		}
+		return -1;
+	}
+
+	public static void receive(PeerData peerData, byte[] buf, ByteArrayOutputStream bout) throws MalformedURLException, IOException
 	{
 		byte[] header = (version + "4").getBytes();
 		URLConnection conn = new URL(serverurl).openConnection();
@@ -159,14 +177,18 @@ class Utils
 		out.flush();
 		InputStream in = getURLInput(conn, "receive");
 		int len;
+		bout.reset();
 		while((len = in.read(buf)) > 0)
-		{
-			peerData.peerOut.write(decrypt(buf), 0, len);
-			System.err.print(peerData.peer.toString());
-			System.err.print(" receive:");
-			System.err.println(toHex(buf, len, null).toString());
-		}
+			bout.write(buf, 0, len);
+		buf = bout.toByteArray();
+		int pos = searchBytes(buf, prepostfix);
+		System.arraycopy(buf, pos + prepostfix.length, buf, 0, buf.length - pos - prepostfix.length);
+		pos = searchBytes(buf, prepostfix);
+		peerData.peerOut.write(decrypt(buf), 0, pos);
 		peerData.peerOut.flush();
+		System.err.print(peerData.peer.toString());
+		System.err.print(" receive:");
+		System.err.println(toHex(buf, pos, null).toString());
 	}
 
 	public static void close(PeerData peerData) throws MalformedURLException, IOException
@@ -318,8 +340,9 @@ class PeerReceiver implements Runnable
 		try
 		{
 			Thread.sleep(100);
+			ByteArrayOutputStream bout = new ByteArrayOutputStream();
 			while(true)
-				Utils.receive(peerData, buf);
+				Utils.receive(peerData, buf, bout);
 		}
 		catch (MalformedURLException e)
 		{}
@@ -361,6 +384,7 @@ public class PhpSocks5 implements Runnable
 		ServerSocket ss = new ServerSocket(Integer.parseInt(props.getProperty("localport")), 0, InetAddress.getByName(props.getProperty("localhost")));
 		Utils.secretkey = props.getProperty("secretkey").getBytes();
 		Utils.serverurl = props.getProperty("serverurl");
+		Utils.prepostfix = props.getProperty("prepostfix").getBytes();
 		while(true)
 		{
 			PeerData peerData = new PeerData();
