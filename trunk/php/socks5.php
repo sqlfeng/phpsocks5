@@ -6,13 +6,14 @@ $dbpass = '123123';
 $dbname = 'phpsocks5';
 
 $secretkey = "gnuwisy78346g86s786d87f6782hjdkhkjchzxkjhkdjhdfhi2uq3yrsyidyfuishyidhyichyizxihyiuhyfiu89347979834ghe987t898d7uf897s89j";
-$prepostfix = "gh9we7hy847t897sd8fyu4895";
+$prefix = "gwe7hy847t897sd8fy4895";
+$postfix = "h89ru89duy89fy2y9889we";
 
 $dbprefix = 'phpsocks5_';
 $invstep = 100000;
 $invmax = 3000000;
 
-$version = "02";
+$version = "03";
 
 function phpsocks5_encrypt($datastr)
 {
@@ -265,9 +266,7 @@ elseif($postdata[2] == "4")
 			{
 				$cnt = base64_decode($row[1]);
 				phpsocks5_log("receive process 5 $phpsid echo: " . phpsocks5_tohex($cnt));
-				echo $prepostfix;
-				echo phpsocks5_encrypt($cnt);
-				echo $prepostfix;
+				echo $prefix . phpsocks5_encrypt($cnt) . $postfix;
 			}
 			else
 				phpsocks5_http_500('break');
