@@ -24,9 +24,11 @@ class Utils
 
 	public static String serverurl;
 
-	public static byte[] prepostfix;
+	public static byte[] prefix;
 
-	public static String version = "02";
+	public static byte[] postfix;
+
+	public static String version = "03";
 
 	public static byte[] encrypt(byte[] data)
 	{
@@ -181,9 +183,9 @@ class Utils
 		while((len = in.read(buf)) > 0)
 			bout.write(buf, 0, len);
 		buf = bout.toByteArray();
-		int pos = searchBytes(buf, prepostfix);
-		System.arraycopy(buf, pos + prepostfix.length, buf, 0, buf.length - pos - prepostfix.length);
-		pos = searchBytes(buf, prepostfix);
+		int pos = searchBytes(buf, prefix);
+		System.arraycopy(buf, pos + prefix.length, buf, 0, buf.length - pos - prefix.length);
+		pos = searchBytes(buf, postfix);
 		peerData.peerOut.write(decrypt(buf), 0, pos);
 		peerData.peerOut.flush();
 		System.err.print(peerData.peer.toString());
@@ -384,7 +386,8 @@ public class PhpSocks5 implements Runnable
 		ServerSocket ss = new ServerSocket(Integer.parseInt(props.getProperty("localport")), 0, InetAddress.getByName(props.getProperty("localhost")));
 		Utils.secretkey = props.getProperty("secretkey").getBytes();
 		Utils.serverurl = props.getProperty("serverurl");
-		Utils.prepostfix = props.getProperty("prepostfix").getBytes();
+		Utils.prefix = props.getProperty("prefix").getBytes();
+		Utils.postfix = props.getProperty("postfix").getBytes();
 		while(true)
 		{
 			PeerData peerData = new PeerData();
