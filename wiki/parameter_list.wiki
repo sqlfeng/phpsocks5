@@ -8,8 +8,8 @@
 = 参数详细作用解释 =
 
 == Java客户端 ==
-  * serverurl：
-  * secretkey：
+  * serverurl：服务器端php的可访问网址；
+  * secretkey：加密用的密钥，服务器端和客户端需要一致，现在版本加密使用简单异或操作，所以密钥长度建议超过单个数据包4096字节长度；
   * prefix：
   * postfix：
   * localport：
@@ -21,7 +21,7 @@
   * dbuser：
   * dbpass：
   * dbname：
-  * secretkey：
+  * secretkey：加密用的密钥，服务器端和客户端需要一致，现在版本加密使用简单异或操作，所以密钥长度建议超过单个数据包4096字节长度；
   * prefix：
   * postfix：
   * dbprefix：
