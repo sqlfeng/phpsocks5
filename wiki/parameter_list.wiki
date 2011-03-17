@@ -5,10 +5,26 @@
 主要解释各个参数的意义。
 
 
-= 详细参数解释 =
+= 参数详细作用解释 =
 
 == Java客户端 ==
-  * 
+  * serverurl：
+  * secretkey：
+  * prefix：
+  * postfix：
+  * localport：
+  * localhost：
 
 == PHP服务器端 ==
-  * 
+  * dbhost：
+  * dbport：
+  * dbuser：
+  * dbpass：
+  * dbname：
+  * secretkey：
+  * prefix：
+  * postfix：
+  * dbprefix：
+  * invstep：
+  * invmax：
+  * version：
