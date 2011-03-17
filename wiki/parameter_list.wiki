@@ -8,12 +8,12 @@
 = 参数详细作用解释 =
 
 == Java客户端 ==
-  * serverurl：服务器端php的可访问网址；
-  * secretkey：加密用的密钥，服务器端和客户端需要一致，现在版本加密使用简单异或操作，所以密钥长度建议超过单个数据包4096字节长度；
-  * prefix：
-  * postfix：
-  * localport：
-  * localhost：
+  * serverurl：服务器端php的可访问网址。
+  * secretkey：加密用的密钥，服务器端和客户端需要一致，现在版本加密使用简单异或操作，所以密钥长度建议超过单个数据包4096字节长度。
+  * prefix：为了避免服务器端由于某些情况（比如强制插入广告、php的warning提示等）返回非php程序返回的数据，所以加入了prefix和postfix，每次php返回数据时都在数据两端加上prefix和postfix，客户端收到后只使用prefix和postfix之间的数据。服务器端和客户端的prefix和postfix要求一致。
+  * postfix：为了避免服务器端由于某些情况（比如强制插入广告、php的warning提示等）返回非php程序返回的数据，所以加入了prefix和postfix，每次php返回数据时都在数据两端加上prefix和postfix，客户端收到后只使用prefix和postfix之间的数据。服务器端和客户端的prefix和postfix要求一致。
+  * localport：Java客户端侦听的端口，此端口即是socks5代理端口。
+  * localhost：Java客户端绑定的IP，默认为127.0.0.1，只能本机使用。如果需要非本机使用，可以改成0.0.0.0。
 
 == PHP服务器端 ==
   * dbhost：
@@ -21,9 +21,9 @@
   * dbuser：
   * dbpass：
   * dbname：
-  * secretkey：加密用的密钥，服务器端和客户端需要一致，现在版本加密使用简单异或操作，所以密钥长度建议超过单个数据包4096字节长度；
-  * prefix：
-  * postfix：
+  * secretkey：加密用的密钥，服务器端和客户端需要一致，现在版本加密使用简单异或操作，所以密钥长度建议超过单个数据包4096字节长度。
+  * prefix：为了避免服务器端由于某些情况（比如强制插入广告、php的warning提示等）返回非php程序返回的数据，所以加入了prefix和postfix，每次php返回数据时都在数据两端加上prefix和postfix，客户端收到后只使用prefix和postfix之间的数据。服务器端和客户端的prefix和postfix要求一致。
+  * postfix：为了避免服务器端由于某些情况（比如强制插入广告、php的warning提示等）返回非php程序返回的数据，所以加入了prefix和postfix，每次php返回数据时都在数据两端加上prefix和postfix，客户端收到后只使用prefix和postfix之间的数据。服务器端和客户端的prefix和postfix要求一致。
   * dbprefix：
   * invstep：
   * invmax：
