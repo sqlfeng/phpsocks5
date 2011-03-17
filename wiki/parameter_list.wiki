@@ -16,15 +16,15 @@
   * localhost：Java客户端绑定的IP，默认为127.0.0.1，只能本机使用。如果需要非本机使用，可以改成0.0.0.0。
 
 == PHP服务器端 ==
-  * dbhost：
-  * dbport：
-  * dbuser：
-  * dbpass：
-  * dbname：
+  * dbhost：MySQL数据库的地址。
+  * dbport：MySQL数据库的端口，默认为3306。
+  * dbuser：MySQL数据库的用户名。
+  * dbpass：MySQL数据库的口令。
+  * dbname：MySQL数据库的库名。
   * secretkey：加密用的密钥，服务器端和客户端需要一致，现在版本加密使用简单异或操作，所以密钥长度建议超过单个数据包4096字节长度。
   * prefix：为了避免服务器端由于某些情况（比如强制插入广告、php的warning提示等）返回非php程序返回的数据，所以加入了prefix和postfix，每次php返回数据时都在数据两端加上prefix和postfix，客户端收到后只使用prefix和postfix之间的数据。服务器端和客户端的prefix和postfix要求一致。
   * postfix：为了避免服务器端由于某些情况（比如强制插入广告、php的warning提示等）返回非php程序返回的数据，所以加入了prefix和postfix，每次php返回数据时都在数据两端加上prefix和postfix，客户端收到后只使用prefix和postfix之间的数据。服务器端和客户端的prefix和postfix要求一致。
-  * dbprefix：
+  * dbprefix：作用有2：1、服务器端php程序建MySQL数据表和操作数据表时的表名前缀，默认为“phpsocks5_”，所以建的3个表和使用的时候都是“phpsocks5_”开头的。可以更改此前缀，更改后需要重新使用浏览器访问服务器端的php网址建表。2、此参数现在还用作log文件的前缀，更改此参数也会使log文件的前缀改变。
   * invstep：
   * invmax：
   * version：
