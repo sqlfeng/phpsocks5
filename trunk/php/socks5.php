@@ -6,6 +6,7 @@ $dbpass = '123123';
 $dbname = 'phpsocks5';
 
 $secretkey = "gnuwisy78346g86s786d87f6782hjdkhkjchzxkjhkdjhdfhi2uq3yrsyidyfuishyidhyichyizxihyiuhyfiu89347979834ghe987t898d7uf897s89j";
+$debuginfo = True;	//	True or False
 $prefix = "gwe7hy847t897sd8fy4895";
 $postfix = "h89ru89duy89fy2y9889we";
 
@@ -31,6 +32,9 @@ function phpsocks5_decrypt($datastr)
 
 function phpsocks5_tohex($datastr)
 {
+	global $debuginfo;
+	if(!$debuginfo)
+		return '';
 	$hexstr = bin2hex($datastr);
 	$hexstr .= '(';
 	for($i = 0; $i < strlen($datastr); $i++)
@@ -47,6 +51,9 @@ function phpsocks5_tohex($datastr)
 function phpsocks5_log($message)
 {
 	global $dbprefix;
+	global $debuginfo;
+	if(!$debuginfo)
+		return;
 	error_log(date(DATE_RFC1123) . "\t" . $message . "\n", 3, $dbprefix . "log.log");
 }
 
@@ -110,24 +117,28 @@ if(!$postdata)
 	phpsocks5_log("create table process");
 	if(!mysql_query("CREATE TABLE ${dbprefix}conning (  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,  sid VARCHAR(200) NOT NULL,  host VARCHAR(512) NOT NULL,  port INTEGER NOT NULL,  PRIMARY KEY (id))"))
 	{
-		echo 'Create table 1 error.';
+		if($debuginfo)
+			echo 'Create table 1 error.';
 		mysql_close();
 		exit;
 	}
 	if(!mysql_query("CREATE TABLE ${dbprefix}sending (  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,  sid VARCHAR(200) NOT NULL,  cnt VARCHAR(8192) NOT NULL,  PRIMARY KEY (id))"))
 	{
-		echo 'Create table 2 error.';
+		if($debuginfo)
+			echo 'Create table 2 error.';
 		mysql_close();
 		exit;
 	}
 	if(!mysql_query("CREATE TABLE ${dbprefix}recving (  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,  sid VARCHAR(200) NOT NULL,  cnt VARCHAR(8192) NOT NULL,  PRIMARY KEY (id))"))
 	{
-		echo 'Create table 3 error.';
+		if($debuginfo)
+			echo 'Create table 3 error.';
 		mysql_close();
 		exit;
 	}
 	mysql_close();
-	echo 'Create tables successfully.';
+	if($debuginfo)
+		echo 'Create tables successfully.';
 	exit;
 }
 
