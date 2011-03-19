@@ -54,6 +54,8 @@ class Utils
 	{
 		if(sb == null)
 			sb = new StringBuilder();
+		else
+			sb.delete(0, sb.length());
 		for(int i = 0; i < len; i++)
 		{
 			sb.append(' ');
@@ -86,7 +88,7 @@ class Utils
 			System.err.print(new Date());
 			System.err.print("\tException in ");
 			System.err.print(func);
-			System.err.print(": ");
+			System.err.print(": {encrypt=");
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();
 			try
 			{
@@ -96,8 +98,11 @@ class Utils
 			catch (Exception e1)
 			{}
 			buf = bout.toByteArray();
-			System.err.write(decrypt(buf));
-			System.err.println();
+			StringBuilder sb = new StringBuilder();
+			System.err.print(toHex(buf, buf.length, sb).toString());
+			System.err.print(", decrypt=");
+			System.err.print(toHex(decrypt(buf), buf.length, sb).toString());
+			System.err.println("}");
 			throw e;
 		}
 	}
@@ -183,14 +188,18 @@ class Utils
 		while((len = in.read(buf)) > 0)
 			bout.write(buf, 0, len);
 		buf = bout.toByteArray();
+		StringBuilder sb = new StringBuilder();
+		System.err.print(peerData.peer.toString());
+		System.err.print(" receive: {encrypt=");
+		System.err.print(toHex(buf, buf.length, sb).toString());
+		System.err.print(", decrypt=");
 		int pos = searchBytes(buf, prefix);
 		System.arraycopy(buf, pos + prefix.length, buf, 0, buf.length - pos - prefix.length);
 		pos = searchBytes(buf, postfix);
 		peerData.peerOut.write(decrypt(buf), 0, pos);
 		peerData.peerOut.flush();
-		System.err.print(peerData.peer.toString());
-		System.err.print(" receive:");
-		System.err.println(toHex(buf, pos, null).toString());
+		System.err.print(toHex(buf, pos, sb).toString());
+		System.err.println("}");
 	}
 
 	public static void close(PeerData peerData) throws MalformedURLException, IOException
@@ -383,6 +392,7 @@ public class PhpSocks5 implements Runnable
 	{
 		Properties props = new Properties();
 		props.load(PhpSocks5.class.getResourceAsStream("/phpsocks5.properties"));
+		props.store(System.err, "phpsocks5.properties");
 		ServerSocket ss = new ServerSocket(Integer.parseInt(props.getProperty("localport")), 0, InetAddress.getByName(props.getProperty("localhost")));
 		Utils.secretkey = props.getProperty("secretkey").getBytes();
 		Utils.serverurl = props.getProperty("serverurl");
