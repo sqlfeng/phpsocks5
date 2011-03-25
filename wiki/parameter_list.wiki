@@ -16,6 +16,10 @@
   * localport：Java客户端侦听的端口，此端口即是socks5代理端口。
   * localhost：Java客户端绑定的IP，默认为127.0.0.1，只能本机使用。如果需要非本机使用，可以改成0.0.0.0。
 
+== Polipo ==
+  * polipohost：Polipo绑定的IP，默认为127.0.0.1，只能本机使用。如果需要非本机使用，可以改成0.0.0.0。
+  * polipoport：Polipo侦听的端口，此端口即是http和https代理端口。
+
 == PHP服务器端 ==
   * dbhost：MySQL数据库的地址。
   * dbport：MySQL数据库的端口，默认为3306。
