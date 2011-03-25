@@ -106,20 +106,31 @@ public class Deploy
 				}
 				int i;
 				for(i = 0; i < ssrvCfg.length; i++)
+				{
 					if(line.startsWith("$" + ssrvCfg[i] + " "))
+					{
 						fcur.println("$" + ssrvCfg[i] + " = '" + mconfig.get(ssrvCfg[i]) + "';");
-				if(i == ssrvCfg.length)
+						break;
+					}
+				}
+				if(i != ssrvCfg.length)
 					continue;
 				for(i = 0; i < nsrvCfg.length; i++)
-					if(line.startsWith("$" + ssrvCfg[i] + " "))
-						fcur.println("$" + ssrvCfg[i] + " = " + mconfig.get(ssrvCfg[i]) + ";");
-				if(i == nsrvCfg.length)
+				{
+					if(line.startsWith("$" + nsrvCfg[i] + " "))
+					{
+						fcur.println("$" + nsrvCfg[i] + " = " + mconfig.get(nsrvCfg[i]) + ";");
+						break;
+					}
+				}
+				if(i != nsrvCfg.length)
 					continue;
 				fcur.println(line);
 			}
 			fcur.flush();
 			fcur.close();
 			System.out.print(prompt.getProperty("uploadphp"));
+			brStdIn.readLine();
 		}
 		{
 			System.out.print(prompt.getProperty("inputserverurl"));
@@ -133,7 +144,7 @@ public class Deploy
 			PrintStream fcur = new PrintStream(new FileOutputStream("phpsocks5.properties"));
 			String[] cCfg = new String[]{"serverurl", "secretkey", "prefix", "postfix", "localport", "localhost"};
 			for(int i = 0; i < cCfg.length; i++)
-				fcur.println(cCfg[i] + " = " + mconfig.get(cCfg[i]));
+				fcur.println(cCfg[i] + "=" + mconfig.get(cCfg[i]));
 			fcur.flush();
 			fcur.close();
 		}
@@ -151,7 +162,7 @@ public class Deploy
 			fcur.flush();
 			fcur.close();
 		}
-		System.out.print(prompt.getProperty("runtips"));
+		System.out.println(prompt.getProperty("runtips"));
 	}
 
 }
