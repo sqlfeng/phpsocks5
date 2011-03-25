@@ -157,7 +157,7 @@ public class Deploy
 		{
 			PrintStream fcur = new PrintStream(new FileOutputStream("polipo.conf"));
 			fcur.println("socksParentProxy=127.0.0.1:" + mconfig.get("localport"));
-			fcur.println("proxyHost=" + mconfig.get("polipohost"));
+			fcur.println("proxyAddress=" + mconfig.get("polipohost"));
 			fcur.println("proxyPort=" + mconfig.get("polipoport"));
 			fcur.flush();
 			fcur.close();

@@ -1,6 +1,7 @@
 @echo off
 cd java
 if not exist phpsocks5.properties goto notdeploy
+echo Started.
 java phpsocks5.PhpSocks5 > socks5out.log 2> socks5err.log
 goto runend
 :notdeploy
