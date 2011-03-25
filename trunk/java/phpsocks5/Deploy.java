@@ -8,8 +8,10 @@ public class Deploy
 
 	public static void main(String[] args) throws NumberFormatException, IOException
 	{
-		FileOutputStream ftmp = new FileOutputStream("deploy.tmp");
-		ftmp.close();
+		{
+			FileOutputStream ftmp = new FileOutputStream("deploy.tmp");
+			ftmp.close();
+		}
 		BufferedReader brStdIn = new BufferedReader(new InputStreamReader(System.in));
 		System.out.print("Please select language.  1 - English, 2 - Chinese: ");
 		Properties prompt = new Properties();
@@ -81,10 +83,75 @@ public class Deploy
 			System.out.printf(prompt.getProperty("editconfig"), e.getKey(), e.getValue());
 			e.setValue(brStdIn.readLine());
 		}
-		File fbak = new File("../php/socks5.php.bak");
-		fbak.delete();
-		File fcur = new File("../php/socks5.php");
-		fcur.renameTo(fbak);
+		{
+			File fbak = new File("../php/socks5.php.bak");
+			fbak.delete();
+			File fcur = new File("../php/socks5.php");
+			fcur.renameTo(fbak);
+		}
+		{
+			BufferedReader fbak = new BufferedReader(new InputStreamReader(new FileInputStream("../php/socks5.php.bak")));
+			PrintStream fcur = new PrintStream(new FileOutputStream("../php/socks5.php"));
+			String[] ssrvCfg = new String[]{"dbhost", "dbport", "dbuser", "dbpass", "dbname", "secretkey", "prefix", "postfix", "dbprefix"};
+			String[] nsrvCfg = new String[]{"debuginfo", "invstep", "invmax"};
+			while(true)
+			{
+				String line = fbak.readLine();
+				if(line == null)
+					break;
+				if(line.equals("?>"))
+				{
+					fcur.print(line);
+					break;
+				}
+				int i;
+				for(i = 0; i < ssrvCfg.length; i++)
+					if(line.startsWith("$" + ssrvCfg[i] + " "))
+						fcur.println("$" + ssrvCfg[i] + " = '" + mconfig.get(ssrvCfg[i]) + "';");
+				if(i == ssrvCfg.length)
+					continue;
+				for(i = 0; i < nsrvCfg.length; i++)
+					if(line.startsWith("$" + ssrvCfg[i] + " "))
+						fcur.println("$" + ssrvCfg[i] + " = " + mconfig.get(ssrvCfg[i]) + ";");
+				if(i == nsrvCfg.length)
+					continue;
+				fcur.println(line);
+			}
+			fcur.flush();
+			fcur.close();
+			System.out.print(prompt.getProperty("uploadphp"));
+		}
+		{
+			System.out.print(prompt.getProperty("inputserverurl"));
+			mconfig.put("serverurl", brStdIn.readLine());
+			File fbak = new File("phpsocks5.properties.bak");
+			fbak.delete();
+			File fcur = new File("phpsocks5.properties");
+			fcur.renameTo(fbak);
+		}
+		{
+			PrintStream fcur = new PrintStream(new FileOutputStream("phpsocks5.properties"));
+			String[] cCfg = new String[]{"serverurl", "secretkey", "prefix", "postfix", "localport", "localhost"};
+			for(int i = 0; i < cCfg.length; i++)
+				fcur.println(cCfg[i] + " = " + mconfig.get(cCfg[i]));
+			fcur.flush();
+			fcur.close();
+		}
+		{
+			File fbak = new File("polipo.conf.bak");
+			fbak.delete();
+			File fcur = new File("polipo.conf");
+			fcur.renameTo(fbak);
+		}
+		{
+			PrintStream fcur = new PrintStream(new FileOutputStream("polipo.conf"));
+			fcur.println("socksParentProxy=127.0.0.1:" + mconfig.get("localport"));
+			fcur.println("proxyHost=" + mconfig.get("polipohost"));
+			fcur.println("proxyPort=" + mconfig.get("polipoport"));
+			fcur.flush();
+			fcur.close();
+		}
+		System.out.print(prompt.getProperty("runtips"));
 	}
 
 }
