@@ -3,6 +3,7 @@ package phpsocks5;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.zip.*;
 
 class PeerData
 {
@@ -73,16 +74,32 @@ class Utils
 		return sb;
 	}
 
+	private static URLConnection getURLConn() throws MalformedURLException, IOException
+	{
+		URLConnection conn = new URL(serverurl).openConnection();
+		conn.setRequestProperty("Accept", "image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, application/x-shockwave-flash, application/vnd.ms-excel, application/vnd.ms-powerpoint, application/msword, application/x-ms-application, application/x-ms-xbap, application/vnd.ms-xpsdocument, application/xaml+xml, */*");
+		conn.setRequestProperty("Accept-Language", "zh-cn");
+		conn.setRequestProperty("Accept-Encoding", "gzip, deflate");
+		conn.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 2.0.50727; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729)");
+		conn.setDoOutput(true);
+		return conn;
+	}
+
 	public static InputStream getURLInput(URLConnection conn, String func) throws IOException
 	{
 		try
 		{
-			return conn.getInputStream();
+			if("gzip".equalsIgnoreCase(conn.getHeaderField("Content-Encoding")))
+				return new GZIPInputStream(conn.getInputStream());
+			else
+				return conn.getInputStream();
 		}
 		catch (IOException e)
 		{
 			HttpURLConnection hconn = (HttpURLConnection) conn;
 			InputStream err = hconn.getErrorStream();
+			if("gzip".equalsIgnoreCase(hconn.getHeaderField("Content-Encoding")))
+				err = new GZIPInputStream(err);
 			byte[] buf = new byte[4096];
 			int len;
 			System.err.print(new Date());
@@ -110,9 +127,7 @@ class Utils
 	public static void connect(PeerData peerData, String host, int port) throws MalformedURLException, IOException
 	{
 		byte[] header = (version + "1" + host + ":" + port).getBytes();
-		URLConnection conn = new URL(serverurl).openConnection();
-		conn.setDoOutput(true);
-		conn.setRequestProperty("User-Agent", "Mozilla/5.0 (compatible; MSIE 6.0; Windows NT 5.1)");
+		URLConnection conn = getURLConn();
 		OutputStream out = conn.getOutputStream();
 		out.write(encrypt(header));
 		out.flush();
@@ -123,9 +138,7 @@ class Utils
 	public static void background(PeerData peerData) throws MalformedURLException, IOException
 	{
 		byte[] header = (version + "2").getBytes();
-		URLConnection conn = new URL(serverurl).openConnection();
-		conn.setDoOutput(true);
-		conn.setRequestProperty("User-Agent", "Mozilla/5.0 (compatible; MSIE 6.0; Windows NT 5.1)");
+		URLConnection conn = getURLConn();
 		peerData.cookieHandler.putCookie(conn);
 		OutputStream out = conn.getOutputStream();
 		out.write(encrypt(header));
@@ -140,9 +153,7 @@ class Utils
 		int len = peerData.peerIn.read(buf);
 		if(len <= 0)
 			throw new EOFException();
-		URLConnection conn = new URL(serverurl).openConnection();
-		conn.setDoOutput(true);
-		conn.setRequestProperty("User-Agent", "Mozilla/5.0 (compatible; MSIE 6.0; Windows NT 5.1)");
+		URLConnection conn = getURLConn();
 		peerData.cookieHandler.putCookie(conn);
 		OutputStream out = conn.getOutputStream();
 		byte[] data = new byte[header.length + len];
@@ -175,9 +186,7 @@ class Utils
 	public static void receive(PeerData peerData, byte[] buf, ByteArrayOutputStream bout) throws MalformedURLException, IOException
 	{
 		byte[] header = (version + "4").getBytes();
-		URLConnection conn = new URL(serverurl).openConnection();
-		conn.setDoOutput(true);
-		conn.setRequestProperty("User-Agent", "Mozilla/5.0 (compatible; MSIE 6.0; Windows NT 5.1)");
+		URLConnection conn = getURLConn();
 		peerData.cookieHandler.putCookie(conn);
 		OutputStream out = conn.getOutputStream();
 		out.write(encrypt(header));
@@ -229,9 +238,7 @@ class Utils
 		catch (Exception e)
 		{}
 		byte[] header = (version + "5").getBytes();
-		URLConnection conn = new URL(serverurl).openConnection();
-		conn.setDoOutput(true);
-		conn.setRequestProperty("User-Agent", "Mozilla/5.0 (compatible; MSIE 6.0; Windows NT 5.1)");
+		URLConnection conn = getURLConn();
 		peerData.cookieHandler.putCookie(conn);
 		OutputStream out = conn.getOutputStream();
 		out.write(encrypt(header));

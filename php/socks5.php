@@ -14,6 +14,7 @@ $dbprefix = 'phpsocks5_';
 $invstep = 100000;
 $invmax = 3000000;
 
+$content_type = 'image/png';
 $version = "03";
 
 function phpsocks5_encrypt($datastr)
@@ -87,13 +88,20 @@ function phpsocks5_usleep($usec)
 	phpsocks5_log("sleep process 4");
 }
 
-$phpsid = mysql_escape_string($_COOKIE['PHPSESSID']);
+phpsocks5_log("process 1");
 
-phpsocks5_log("process 1 $phpsid");
+if(!session_start())
+	phpsocks5_http_500('session_start error');
+
+$phpsid = mysql_escape_string(session_id());
+
+header("Content-Type: $content_type");
+
+phpsocks5_log("process 2 $phpsid");
 
 set_time_limit(30);
 
-phpsocks5_log("process 2 $phpsid");
+phpsocks5_log("process 3 $phpsid");
 
 if(!mysql_pconnect("$dbhost:$dbport", $dbuser, $dbpass))
 	phpsocks5_http_500('mysql_pconnect error');
@@ -102,15 +110,15 @@ if(!mysql_select_db($dbname))
 if(!mysql_query('SET AUTOCOMMIT=1'))
 	phpsocks5_http_500('mysql_query SET AUTOCOMMIT=1 error');
 
-phpsocks5_log("process 3 $phpsid");
+phpsocks5_log("process 4 $phpsid");
 
 $postdata = file_get_contents("php://input");
 
-phpsocks5_log("process 4 $phpsid before decrypt postdata: " . phpsocks5_tohex($postdata));
+phpsocks5_log("process 5 $phpsid before decrypt postdata: " . phpsocks5_tohex($postdata));
 
 $postdata = phpsocks5_decrypt($postdata);
 
-phpsocks5_log("process 5 $phpsid after decrypt postdata: " . phpsocks5_tohex($postdata));
+phpsocks5_log("process 6 $phpsid after decrypt postdata: " . phpsocks5_tohex($postdata));
 
 if(!$postdata)
 {
@@ -145,25 +153,21 @@ if(!$postdata)
 if($postdata[0] != $version[0] || $postdata[1] != $version[1])
 	phpsocks5_http_500('version not match');
 
-phpsocks5_log("process 6");
+phpsocks5_log("process 7");
 
 if($postdata[2] == "1")
 {
 	phpsocks5_log("connect process 1");
-	if(!session_start())
-		phpsocks5_http_500('session_start error');
-	phpsocks5_log("connect process 2");
 	$host = mysql_escape_string(strtok(substr($postdata, 3), ':'));
 	$port = mysql_escape_string(strtok(':'));
-	$phpsid = mysql_escape_string(session_id());
-	phpsocks5_log("connect process 3 $phpsid");
+	phpsocks5_log("connect process 2 $phpsid");
 	mysql_query("DELETE FROM ${dbprefix}conning WHERE sid = '" . $phpsid . "'");
 	mysql_query("DELETE FROM ${dbprefix}sending WHERE sid = '" . $phpsid . "'");
 	mysql_query("DELETE FROM ${dbprefix}recving WHERE sid = '" . $phpsid . "'");
-	phpsocks5_log("connect process 4 $phpsid");
+	phpsocks5_log("connect process 3 $phpsid");
 	if(!mysql_query("INSERT INTO ${dbprefix}conning (sid, host, port) VALUES ('" . session_id() . "', '$host', '$port')"))
 		phpsocks5_http_500('mysql_query INSERT error');
-	phpsocks5_log("connect process 5 $phpsid");
+	phpsocks5_log("connect process 4 $phpsid");
 }
 elseif($postdata[2] == "2")
 {
@@ -301,7 +305,7 @@ elseif($postdata[2] == "5")
 	phpsocks5_log("close process 2 $phpsid");
 }
 
-phpsocks5_log("process 7 $phpsid");
+phpsocks5_log("process 8 $phpsid");
 
 mysql_close();
 ?>
