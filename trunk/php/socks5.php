@@ -15,6 +15,7 @@ $invstep = 100000;
 $invmax = 3000000;
 
 $content_type = 'image/png';
+$sesscookiekey = 'PHPSESSID';
 $version = "03";
 
 function phpsocks5_encrypt($datastr)
@@ -90,12 +91,7 @@ function phpsocks5_usleep($usec)
 
 phpsocks5_log("process 1");
 
-if(!session_start())
-	phpsocks5_http_500('session_start error');
-
-$phpsid = mysql_escape_string(session_id());
-
-header("Content-Type: $content_type");
+$phpsid = mysql_escape_string($_COOKIE[$sesscookiekey]);
 
 phpsocks5_log("process 2 $phpsid");
 
@@ -150,6 +146,8 @@ if(!$postdata)
 	exit;
 }
 
+header("Content-Type: $content_type");
+
 if($postdata[0] != $version[0] || $postdata[1] != $version[1])
 	phpsocks5_http_500('version not match');
 
@@ -158,16 +156,20 @@ phpsocks5_log("process 7");
 if($postdata[2] == "1")
 {
 	phpsocks5_log("connect process 1");
+	if(!session_start())
+		phpsocks5_http_500('session_start error');
+	phpsocks5_log("connect process 2");
 	$host = mysql_escape_string(strtok(substr($postdata, 3), ':'));
 	$port = mysql_escape_string(strtok(':'));
-	phpsocks5_log("connect process 2 $phpsid");
+	$phpsid = mysql_escape_string(session_id());
+	phpsocks5_log("connect process 3 $phpsid");
 	mysql_query("DELETE FROM ${dbprefix}conning WHERE sid = '" . $phpsid . "'");
 	mysql_query("DELETE FROM ${dbprefix}sending WHERE sid = '" . $phpsid . "'");
 	mysql_query("DELETE FROM ${dbprefix}recving WHERE sid = '" . $phpsid . "'");
-	phpsocks5_log("connect process 3 $phpsid");
+	phpsocks5_log("connect process 4 $phpsid");
 	if(!mysql_query("INSERT INTO ${dbprefix}conning (sid, host, port) VALUES ('" . session_id() . "', '$host', '$port')"))
 		phpsocks5_http_500('mysql_query INSERT error');
-	phpsocks5_log("connect process 4 $phpsid");
+	phpsocks5_log("connect process 5 $phpsid");
 }
 elseif($postdata[2] == "2")
 {
