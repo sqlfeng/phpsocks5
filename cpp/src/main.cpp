@@ -5,7 +5,7 @@
 #include "TThreadPool.hh"
 #include "blah.hpp"
 #include "SocketException.h"
-
+#include "packet.h"
 class SockServer:public TThreadPool::TJob
 {
 
@@ -31,24 +31,24 @@ public:
     try{
       std::string data;
       new_sock >> data;
-      for( int i=0 ; i < data.size(); i ++)
-        {
-          LOG <<(int)data[i];
-        }
-      std::cout<<std::endl;
-      LOG<<"send response"<<std::endl;
-      char buf[2] = {0x05, 0x00};
-      std::string send(buf);
+      cc_hs_request req;
+      req.parse(data);
+      LOG<<"Pasr hand shack request";
+      cc_hs_response rsp;
+      std::string send;
+      rsp.dump(send);
       new_sock << send;
-      for( int i=0 ; i < data.size(); i ++)
-        {
-          std::cout <<(int)send[i];
-        }
-      std::cout<<std::endl;
-      LOG<<"send done" <<std::endl;
-      sleep(1);
       new_sock >> data;
-     
+      cc_request cc_req;
+      cc_req.parse(data);
+      std::string host = cc_req.getHost();
+      std::cout<<"host = "<<host<<std::endl;
+      cc_req.getPort();
+      cc_response cc_rsp((cc_response::REP)0);
+      cc_rsp.dump(send);
+      new_sock << send;
+      new_sock >> data;
+      std::cout<<data<<std::endl;
     }
     catch(SocketException & ){}
 

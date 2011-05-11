@@ -19,22 +19,22 @@
 ServerSocket::ServerSocket ( int port )
 {
 
-    if ( ! Socket::create() )
+  if ( ! Socket::create() )
     {
-        LOG << "Could not create server socket";
-        throw SocketException ( "Could not create server socket." );
+      LOG << "Could not create server socket";
+      throw SocketException ( "Could not create server socket." );
     }
 
-    if ( ! Socket::bind ( port ) )
+  if ( ! Socket::bind ( port ) )
     {
-        LOG << "Could not bind to port";
-        throw SocketException ( "Could not bind to port." );
+      LOG << "Could not bind to port";
+      throw SocketException ( "Could not bind to port." );
     }
 
-    if ( ! Socket::listen() )
+  if ( ! Socket::listen() )
     {
-        LOG << "Could not listen to socket";
-        throw SocketException ( "Could not listen to socket." );
+      LOG << "Could not listen to socket";
+      throw SocketException ( "Could not listen to socket." );
     }
 
 }
@@ -52,13 +52,14 @@ ServerSocket::~ServerSocket()
  */
 const ServerSocket& ServerSocket::operator << ( const std::string& s ) const
 {
-    if ( ! Socket::send ( s ) )
+  
+  if ( ! Socket::send ( s ) )
     {
-        LOG << "Could not write to socket";
-        throw SocketException ( "Could not write to socket." );
+      LOG << "Could not write to socket";
+      throw SocketException ( "Could not write to socket." );
     }
-
-    return *this;
+  
+  return *this;
 }
 
 /**
@@ -70,19 +71,54 @@ const ServerSocket& ServerSocket::operator << ( const std::string& s ) const
  */
 const ServerSocket& ServerSocket::operator >> ( std::string& s ) const
 {
-    if ( ! Socket::recv ( s ) )
+
+  if ( ! Socket::recv ( s ) )
     {
-        LOG << "Could not read from socket";
-        throw SocketException ( "Could not read from socket." );
+      LOG << "Could not read from socket";
+      throw SocketException ( "Could not read from socket." );
     }
-    return *this;
+  return *this;
+}
+
+
+int ServerSocket::read(std::string & s ) const
+{
+
+  int len = Socket::recv( s );
+  
+  if ( ! len )
+    {
+
+      LOG<< "Could not read from socket";
+      throw SocketException ( "Could not read from socket");
+    }
+
+  return len;
+
+}
+
+int ServerSocket::write(const std::string & s) const
+{
+  
+  int len=0;
+  
+  len = Socket::send( s );
+  
+  if ( ! len )
+    {
+      LOG << "Could not write to socket";
+      throw SocketException (" Could not write to socket");
+    }
+
+  return len;
+
 }
 
 void ServerSocket::accept ( ServerSocket& sock )
 {
-    if ( ! Socket::accept ( sock ) )
+  if ( ! Socket::accept ( sock ) )
     {
-        LOG << "Could not accept socket";
-        throw SocketException ( "Could not accept socket." );
+      LOG << "Could not accept socket";
+      throw SocketException ( "Could not accept socket." );
     }
 }
