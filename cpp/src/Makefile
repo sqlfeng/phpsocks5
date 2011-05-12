@@ -8,7 +8,7 @@ ifndef arch
    arch = IA32
 endif
 
-CCFLAGS = -Wall -D$(os) -I../minIni -O2 -finline-functions
+CCFLAGS = -Wall -D$(os) -I../minIni -O2 -finline-functions 
 
 ifeq ($(arch), IA32)
    CCFLAGS += -DIA32 #-mcpu=pentiumpro -march=pentiumpro -mmmx -msse
@@ -22,7 +22,7 @@ ifeq ($(arch), IA64)
    CCFLAGS += -DIA64
 endif
 
-LDFLAGS = ../minIni/libminIni.a  -lstdc++ -lpthread -lm -ldl
+LDFLAGS = ../minIni/libminIni.a  -lstdc++ -lpthread -lm -ldl `curlpp-config --libs`
 
 ifeq ($(os), UNIX)
    LDFLAGS += -lsocket
