@@ -80,6 +80,11 @@ class HttpConnect:public HttpCmd,public TThreadPool::TJob
     int port;
 
 public:
+
+    HttpConnect(const std::string & host, const int port );
+
+    void setHostPort( const std::string & host, const int & port);
+
     HttpConnect():HttpCmd(){}
 
     ~HttpConnect(){}

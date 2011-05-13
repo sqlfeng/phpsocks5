@@ -40,13 +40,11 @@ void* WriterMemoryClass::Realloc(void* ptr, size_t size)
 
 size_t WriterMemoryClass::WriteMemoryCallback(char* ptr, size_t size, size_t nmemb)
 {
-    // Calculate the real size of the incoming buffer
+
     size_t realsize = size * nmemb;
 
-    // (Re)Allocate memory for the buffer
     m_pBuffer = (char*) Realloc(m_pBuffer, m_Size + realsize);
 
-    // Test if Buffer is initialized correctly & copy memory
     if (m_pBuffer == NULL) {
         realsize = 0;
     }
@@ -93,14 +91,10 @@ HttpCmd::HttpCmd()
     secretkey = ini->gets("Server","secretkey");
 
 
-
-    // Set the writer callback to enable cURL
-    // to write result in a memory area
     curlpp::types::WriteFunctionFunctor functor(&mWriterChunk,
                                                 &WriterMemoryClass::WriteMemoryCallback);
     curlpp::options::WriteFunction *test = new curlpp::options::WriteFunction(functor);
     httprequest.setOpt(test);
-
 
     using namespace curlpp::Options;
     httprequest.setOpt(new Verbose(true));
@@ -112,6 +106,7 @@ HttpCmd::HttpCmd()
 size_t HttpCmd::readData(const std::string & s)
 {
     try{
+        LOG<<"Start to write data " << s<<std::endl;
         using namespace curlpp::Options;
         std::istringstream istream(s);
         char buf[50];
@@ -139,7 +134,7 @@ size_t HttpCmd::writeData(std::string & s )
 {
     try {
         s.clear();
-        return  mWriterChunk.write(s);
+        return mWriterChunk.write(s);
     }
     catch ( curlpp::LogicError & e )
     {
@@ -173,11 +168,44 @@ HttpCmd::~HttpCmd()
         delete ini;
 }
 
+HttpConnect::HttpConnect(const std::string & host, const int port ): HttpCmd()
+{
+    this->host = host;
+    this->port = port;
+}
 
+void HttpConnect::setHostPort( const std::string & host, const int & port)
+{
+    this->host = host;
+    this->port = port;
+}
 
 void HttpConnect::run(void *)
 {
-    std::ostringstream os;
-    os << version <<"1"<<host<<":"<<port;
-    this->readData(os.str());
+    if ( host.empty())
+    {
+        LOG<<"HOST Empty";
+        throw curlpp::LogicError("Host Empty");
+
+    }
+
+    try{
+        std::ostringstream os;
+
+        os << version <<"1"<<host<<":"<<port;
+
+        std::cout<<os.str()<<std::endl;
+        this->readData(os.str());
+
+        httprequest.perform();
+    }catch ( curlpp::LogicError & e )
+    {
+        LOG<<"Logic Error";
+        std::cout << e.what() << std::endl;
+    }
+    catch ( curlpp::RuntimeError & e )
+    {
+        LOG<<"RuntimeError";
+        std::cout << e.what() << std::endl;
+    }
 }
