@@ -87,6 +87,8 @@ public:
     ~cc_request();
     std::string getHost();
     int getPort();
+
+    CMD getCMD();
     virtual bool parse(const std::string &);
     //  virtual bool dump ( std::string &);
 
@@ -129,7 +131,7 @@ public:
     //virtual bool parse(const std::string &);
     virtual bool dump( std::string &);
 
-    void setResonse(REP);
+    void setResponse(REP);
     void setAddr(ATYP atyp, const char * host,const char * port);
 
 private:

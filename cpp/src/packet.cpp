@@ -79,7 +79,7 @@ bool cc_hs_request::parse(const std::string & s )
 
     validate = true;
     return true;
-
+    LOG<<"Hand shacke request bettween firefox and cppclient has been parsed";
 }
 
 // bool cc_hs_request::dump( std::string & s)
@@ -154,6 +154,11 @@ cc_request::~cc_request()
     if ( ! dist_addr)
         delete dist_addr;
     entry.clear();
+}
+
+typename cc_request::CMD cc_request::getCMD()
+{
+    return cmd;
 }
 
 std::string cc_request::getHost()
@@ -243,7 +248,7 @@ cc_response::~cc_response()
 }
 
 
-void cc_response::setResonse(cc_response::REP rep)
+void cc_response::setResponse(cc_response::REP rep)
 {
     if (!validate || entry.empty())
         throw std::exception();
