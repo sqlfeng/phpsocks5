@@ -58,18 +58,18 @@ class Utils
         else
             sb.delete(0, sb.length());
         for(int i = 0; i < len; i++)
-            {
-                sb.append(' ');
-                sb.append(Integer.toHexString(buf[i] & 0xff));
-            }
+        {
+            sb.append(' ');
+            sb.append(Integer.toHexString(buf[i] & 0xff));
+        }
         sb.append('(');
         for(int i = 0; i < len; i++)
-            {
-                if(buf[i] < 32 || buf[i] > 126)
-                    sb.append('.');
-                else
-                    sb.append((char)buf[i]);
-            }
+        {
+            if(buf[i] < 32 || buf[i] > 126)
+                sb.append('.');
+            else
+                sb.append((char)buf[i]);
+        }
         sb.append(')');
         return sb;
     }
@@ -88,40 +88,40 @@ class Utils
     public static InputStream getURLInput(URLConnection conn, String func) throws IOException
     {
         try
-            {
-                if("gzip".equalsIgnoreCase(conn.getHeaderField("Content-Encoding")))
-                    return new GZIPInputStream(conn.getInputStream());
-                else
-                    return conn.getInputStream();
-            }
+        {
+            if("gzip".equalsIgnoreCase(conn.getHeaderField("Content-Encoding")))
+                return new GZIPInputStream(conn.getInputStream());
+            else
+                return conn.getInputStream();
+        }
         catch (IOException e)
+        {
+            HttpURLConnection hconn = (HttpURLConnection) conn;
+            InputStream err = hconn.getErrorStream();
+            if("gzip".equalsIgnoreCase(hconn.getHeaderField("Content-Encoding")))
+                err = new GZIPInputStream(err);
+            byte[] buf = new byte[4096];
+            int len;
+            System.err.print(new Date());
+            System.err.print("\tException in ");
+            System.err.print(func);
+            System.err.print(": {encrypt=");
+            ByteArrayOutputStream bout = new ByteArrayOutputStream();
+            try
             {
-                HttpURLConnection hconn = (HttpURLConnection) conn;
-                InputStream err = hconn.getErrorStream();
-                if("gzip".equalsIgnoreCase(hconn.getHeaderField("Content-Encoding")))
-                    err = new GZIPInputStream(err);
-                byte[] buf = new byte[4096];
-                int len;
-                System.err.print(new Date());
-                System.err.print("\tException in ");
-                System.err.print(func);
-                System.err.print(": {encrypt=");
-                ByteArrayOutputStream bout = new ByteArrayOutputStream();
-                try
-                    {
-                        while((len = err.read(buf)) > 0)
-                            bout.write(buf, 0, len);
-                    }
-                catch (Exception e1)
-                    {}
-                buf = bout.toByteArray();
-                StringBuilder sb = new StringBuilder();
-                System.err.print(toHex(buf, buf.length, sb).toString());
-                System.err.print(", decrypt=");
-                System.err.print(toHex(decrypt(buf), buf.length, sb).toString());
-                System.err.println("}");
-                throw e;
+                while((len = err.read(buf)) > 0)
+                    bout.write(buf, 0, len);
             }
+            catch (Exception e1)
+            {}
+            buf = bout.toByteArray();
+            StringBuilder sb = new StringBuilder();
+            System.err.print(toHex(buf, buf.length, sb).toString());
+            System.err.print(", decrypt=");
+            System.err.print(toHex(decrypt(buf), buf.length, sb).toString());
+            System.err.println("}");
+            throw e;
+        }
     }
 
     public static void connect(PeerData peerData, String host, int port) throws MalformedURLException, IOException
@@ -170,16 +170,16 @@ class Utils
     public static int searchBytes(byte[] buf, byte[] search)
     {
         for(int i = 0; i < buf.length - search.length; i++)
+        {
+            int j = 0;
+            for(; j < search.length; j++)
             {
-                int j = 0;
-                for(; j < search.length; j++)
-                    {
-                        if(buf[i + j] != search[j])
-                            break;
-                    }
-                if(j == search.length)
-                    return i;
+                if(buf[i + j] != search[j])
+                    break;
             }
+            if(j == search.length)
+                return i;
+        }
         return -1;
     }
 
@@ -214,29 +214,29 @@ class Utils
     public static void close(PeerData peerData) throws MalformedURLException, IOException
     {
         try
-            {
-                Thread.sleep(1000);
-            }
+        {
+            Thread.sleep(1000);
+        }
         catch (InterruptedException e)
-            {}
+        {}
         try
-            {
-                peerData.peerOut.close();
-            }
+        {
+            peerData.peerOut.close();
+        }
         catch (Exception e)
-            {}
+        {}
         try
-            {
-                peerData.peerIn.close();
-            }
+        {
+            peerData.peerIn.close();
+        }
         catch (Exception e)
-            {}
+        {}
         try
-            {
-                peerData.peer.close();
-            }
+        {
+            peerData.peer.close();
+        }
         catch (Exception e)
-            {}
+        {}
         byte[] header = (version + "5").getBytes();
         URLConnection conn = getURLConn();
         peerData.cookieHandler.putCookie(conn);
@@ -261,41 +261,41 @@ class CookieHandler
             return;
         String[] setCookies = setCookie.split("\\s*;\\s*");
         for(int i = 0; i < setCookies.length; i++)
-            {
-                String[] cookie = setCookies[i].split("\\s*=\\s*");
-                cookie[0] = cookie[0].trim();
-                if(cookie[0].equalsIgnoreCase("domain"))
-                    continue;
-                if(cookie[0].equalsIgnoreCase("expires"))
-                    continue;
-                if(cookie[0].equalsIgnoreCase("path"))
-                    continue;
-                if(cookie[0].equalsIgnoreCase("secure"))
-                    continue;
-                if(cookie.length != 2)
-                    cookies.put(cookie[0], null);
-                else
-                    cookies.put(cookie[0], cookie[1]);
-            }
+        {
+            String[] cookie = setCookies[i].split("\\s*=\\s*");
+            cookie[0] = cookie[0].trim();
+            if(cookie[0].equalsIgnoreCase("domain"))
+                continue;
+            if(cookie[0].equalsIgnoreCase("expires"))
+                continue;
+            if(cookie[0].equalsIgnoreCase("path"))
+                continue;
+            if(cookie[0].equalsIgnoreCase("secure"))
+                continue;
+            if(cookie.length != 2)
+                cookies.put(cookie[0], null);
+            else
+                cookies.put(cookie[0], cookie[1]);
+        }
     }
 
     public void putCookie(URLConnection conn)
     {
         String sCookie = "";
         for(Iterator<Map.Entry<String, String>> it = cookies.entrySet().iterator(); it.hasNext(); )
-            {
-                Map.Entry<String, String> e = it.next();
-                if(e.getValue() != null)
-                    sCookie += e.getKey() + "=" + e.getValue() + "; ";
-                else
-                    sCookie += e.getKey() + "; ";
-            }
+        {
+            Map.Entry<String, String> e = it.next();
+            if(e.getValue() != null)
+                sCookie += e.getKey() + "=" + e.getValue() + "; ";
+            else
+                sCookie += e.getKey() + "; ";
+        }
         if(sCookie.length() > 0)
-            {
-                sCookie = sCookie.substring(0, sCookie.length() - 2);
-                conn.setRequestProperty("Cookie", sCookie);
-                System.err.println("sCookie=" + sCookie);
-            }
+        {
+            sCookie = sCookie.substring(0, sCookie.length() - 2);
+            conn.setRequestProperty("Cookie", sCookie);
+            System.err.println("sCookie=" + sCookie);
+        }
     }
 
 }
@@ -314,30 +314,30 @@ class PeerSender implements Runnable
     {
         byte[] buf = new byte[4096];
         try
-            {
-                Thread.sleep(100);
-                while(true)
-                    Utils.send(peerData, buf);
-            }
+        {
+            Thread.sleep(100);
+            while(true)
+                Utils.send(peerData, buf);
+        }
         catch (MalformedURLException e)
-            {}
+        {}
         catch (IOException e)
-            {
-                //e.printStackTrace();
-            }
+        {
+            //e.printStackTrace();
+        }
         catch (InterruptedException e)
-            {}
+        {}
         finally
+        {
+            try
             {
-                try
-                    {
-                        Utils.close(peerData);
-                    }
-                catch (MalformedURLException e)
-                    {}
-                catch (IOException e)
-                    {}
+                Utils.close(peerData);
             }
+            catch (MalformedURLException e)
+            {}
+            catch (IOException e)
+            {}
+        }
     }
 
 }
@@ -356,31 +356,31 @@ class PeerReceiver implements Runnable
     {
         byte[] buf = new byte[4096];
         try
-            {
-                Thread.sleep(100);
-                ByteArrayOutputStream bout = new ByteArrayOutputStream();
-                while(true)
-                    Utils.receive(peerData, buf, bout);
-            }
+        {
+            Thread.sleep(100);
+            ByteArrayOutputStream bout = new ByteArrayOutputStream();
+            while(true)
+                Utils.receive(peerData, buf, bout);
+        }
         catch (MalformedURLException e)
-            {}
+        {}
         catch (IOException e)
-            {
-                //e.printStackTrace();
-            }
+        {
+            //e.printStackTrace();
+        }
         catch (InterruptedException e)
-            {}
+        {}
         finally
+        {
+            try
             {
-                try
-                    {
-                        Utils.close(peerData);
-                    }
-                catch (MalformedURLException e)
-                    {}
-                catch (IOException e)
-                    {}
+                Utils.close(peerData);
             }
+            catch (MalformedURLException e)
+            {}
+            catch (IOException e)
+            {}
+        }
     }
 
 }
@@ -406,13 +406,13 @@ public class PhpSocks5 implements Runnable
         Utils.prefix = props.getProperty("prefix").getBytes();
         Utils.postfix = props.getProperty("postfix").getBytes();
         while(true)
-            {
-                PeerData peerData = new PeerData();
-                peerData.peer = ss.accept();
-                peerData.peerOut = new DataOutputStream(peerData.peer.getOutputStream());
-                peerData.peerIn = new DataInputStream(peerData.peer.getInputStream());
-                new Thread(new PhpSocks5(peerData)).start();
-            }
+        {
+            PeerData peerData = new PeerData();
+            peerData.peer = ss.accept();
+            peerData.peerOut = new DataOutputStream(peerData.peer.getOutputStream());
+            peerData.peerIn = new DataInputStream(peerData.peer.getInputStream());
+            new Thread(new PhpSocks5(peerData)).start();
+        }
     }
 
     private static void socksResult(OutputStream out, int errno) throws IOException
@@ -436,65 +436,65 @@ public class PhpSocks5 implements Runnable
     {
         byte[] buf = new byte[4096];
         try
+        {
+            Utils.readByte(peerData.peerIn);
             {
-                Utils.readByte(peerData.peerIn);
-                {
-                    int nmethods = Utils.readByte(peerData.peerIn);
-                    if(nmethods == -1)
-                        throw new EOFException();
-                    peerData.peerIn.readFully(buf, 0, nmethods);
-                }
-                peerData.peerOut.write(5);
-                peerData.peerOut.write(0);
-                peerData.peerOut.flush();
-                Utils.readByte(peerData.peerIn);
-                {
-                    int cmd = Utils.readByte(peerData.peerIn);
-                    if(cmd != 1)
-                        socksResult(peerData.peerOut, 7);
-                    Utils.readByte(peerData.peerIn);
-                    int atyp = Utils.readByte(peerData.peerIn);
-                    String host;
-                    switch(atyp)
-                        {
-                        case 1:
-                            byte[] addr = new byte[4];
-                            peerData.peerIn.readFully(addr);
-                            host = InetAddress.getByAddress(addr).getHostAddress();
-                            break;
-                        case 3:
-                            int addrLen = Utils.readByte(peerData.peerIn);
-                            peerData.peerIn.readFully(buf, 0, addrLen);
-                            host = new String(buf, 0, addrLen);
-                            break;
-                        default:
-                            socksResult(peerData.peerOut, 8);
-                            return;
-                        }
-                    int port = Utils.readByte(peerData.peerIn) << 8;
-                    port |= Utils.readByte(peerData.peerIn);
-                    Utils.connect(peerData, host, port);
-                }
-                socksResult(peerData.peerOut, 0);
-                new Thread(new PeerSender(peerData)).start();
-                new Thread(new PeerReceiver(peerData)).start();
-                Utils.background(peerData);
+                int nmethods = Utils.readByte(peerData.peerIn);
+                if(nmethods == -1)
+                    throw new EOFException();
+                peerData.peerIn.readFully(buf, 0, nmethods);
             }
+            peerData.peerOut.write(5);
+            peerData.peerOut.write(0);
+            peerData.peerOut.flush();
+            Utils.readByte(peerData.peerIn);
+            {
+                int cmd = Utils.readByte(peerData.peerIn);
+                if(cmd != 1)
+                    socksResult(peerData.peerOut, 7);
+                Utils.readByte(peerData.peerIn);
+                int atyp = Utils.readByte(peerData.peerIn);
+                String host;
+                switch(atyp)
+                {
+                case 1:
+                    byte[] addr = new byte[4];
+                    peerData.peerIn.readFully(addr);
+                    host = InetAddress.getByAddress(addr).getHostAddress();
+                    break;
+                case 3:
+                    int addrLen = Utils.readByte(peerData.peerIn);
+                    peerData.peerIn.readFully(buf, 0, addrLen);
+                    host = new String(buf, 0, addrLen);
+                    break;
+                default:
+                    socksResult(peerData.peerOut, 8);
+                    return;
+                }
+                int port = Utils.readByte(peerData.peerIn) << 8;
+                port |= Utils.readByte(peerData.peerIn);
+                Utils.connect(peerData, host, port);
+            }
+            socksResult(peerData.peerOut, 0);
+            new Thread(new PeerSender(peerData)).start();
+            new Thread(new PeerReceiver(peerData)).start();
+            Utils.background(peerData);
+        }
         catch (IOException e)
-            {
-                e.printStackTrace();
-            }
+        {
+            e.printStackTrace();
+        }
         finally
+        {
+            try
             {
-                try
-                    {
-                        Utils.close(peerData);
-                    }
-                catch (MalformedURLException e)
-                    {}
-                catch (IOException e)
-                    {}
+                Utils.close(peerData);
             }
+            catch (MalformedURLException e)
+            {}
+            catch (IOException e)
+            {}
+        }
 
     }
 

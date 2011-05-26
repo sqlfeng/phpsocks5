@@ -14,6 +14,9 @@
 #include  <malloc.h>
 #include  <cstring>
 
+#include <curlpp/Infos.hpp>
+#include <curlpp/Options.hpp>
+
 #define MAX_FILE_LENGTH 20000
 
 
@@ -90,6 +93,8 @@ HttpCmd::HttpCmd()
 
     secretkey = ini->gets("Server","secretkey");
 
+    indata.clear();
+    outdata.clear();
 
     curlpp::types::WriteFunctionFunctor functor(&mWriterChunk,
                                                 &WriterMemoryClass::WriteMemoryCallback);
@@ -107,17 +112,20 @@ size_t HttpCmd::readData(const std::string & s)
 {
     try{
         LOG<<"Start to write data " << s<<std::endl;
-        using namespace curlpp::Options;
-        std::istringstream istream(s);
-        char buf[50];
-        std::list<std::string> headers;
-        headers.push_back("Content-Type: */*");
-        sprintf(buf, "Content-Length: %d", s.size());
-        headers.push_back(buf);
-        httprequest.setOpt(new ReadStream(&istream));
-        httprequest.setOpt(new InfileSize(s.size()));
-        httprequest.setOpt(new Upload(true));
-        httprequest.setOpt(new HttpHeader(headers));
+        httprequest.setOpt(new curlpp::options::FileTime(true));
+        httprequest.setOpt(new curlpp::options::Verbose(true));
+
+        std::string body = encrypt(s);
+
+        std::list<std::string> header;
+        header.push_back("Content-Type: */*");
+
+        httprequest.setOpt(new curlpp::options::HttpHeader(header));
+
+        httprequest.setOpt(new curlpp::options::PostFields(body));
+        httprequest.setOpt(new curlpp::options::PostFieldSize(body.size()));
+
+        httprequest.setOpt(curlpp::options::CookieList(""));
     }
     catch ( curlpp::LogicError & e )
     {
@@ -134,7 +142,9 @@ size_t HttpCmd::writeData(std::string & s )
 {
     try {
         s.clear();
-        return mWriterChunk.write(s);
+        mWriterChunk.write(s);
+        s = decrypt(s);
+        return s.size();
     }
     catch ( curlpp::LogicError & e )
     {
@@ -161,6 +171,42 @@ std::string HttpCmd::decrypt( const std::string & s)
     return encrypt(s);
 }
 
+void HttpCmd::putCookies(const std::list<std::string> & cookieslist)
+{
+    if ( cookieslist.empty() )
+    {
+        LOG<< "Cookie list empty!";
+        return;
+    }
+    else
+    {
+        try{
+            for( std::list<std::string>::const_iterator it = cookieslist.begin(); it!= cookies.end(); it ++)
+            {
+                httprequest.setOpt(curlpp::options::CookieList(*it));
+            }
+        }catch ( curlpp::LogicError & e )
+        {
+            LOG<<"Logic Error";
+            std::cout << e.what() << std::endl;
+        }
+        catch ( curlpp::RuntimeError & e )
+        {
+            LOG<<"RuntimeError";
+            std::cout << e.what() << std::endl;
+        }
+    }
+}
+
+std::list<std::string> HttpCmd::getCookies()
+{
+
+    if (cookies.empty())
+    {
+        LOG<< "Cookie list is empty!";
+    }
+    return cookies;
+}
 
 HttpCmd::~HttpCmd()
 {
@@ -186,10 +232,10 @@ void HttpConnect::run(void *)
     {
         LOG<<"HOST Empty";
         throw curlpp::LogicError("Host Empty");
-
     }
 
     try{
+
         std::ostringstream os;
 
         os << version <<"1"<<host<<":"<<port;
@@ -198,6 +244,77 @@ void HttpConnect::run(void *)
         this->readData(os.str());
 
         httprequest.perform();
+
+        std::string effURL;
+        curlpp::infos::EffectiveUrl::get(httprequest, effURL);
+        LOG << "Effective URL: " << effURL << std::endl;
+
+        LOG << "Response code: "
+            << curlpp::infos::ResponseCode::get(httprequest)
+            << std::endl;
+
+        curlpp::infos::CookieList::get(httprequest, cookies);
+
+        if ( cookies.empty())
+        {
+            LOG<<"Cookie empty";
+        }
+
+    }catch ( curlpp::LogicError & e )
+    {
+        LOG<<"Logic Error";
+        std::cout << e.what() << std::endl;
+    }
+    catch ( curlpp::RuntimeError & e )
+    {
+        LOG<<"RuntimeError";
+        std::cout << e.what() << std::endl;
+    }
+}
+
+HttpIdle::HttpIdle(std::list<std::string> cookieslist)
+{
+
+    this->putCookies(cookieslist);
+
+}
+
+void HttpIdle::run(void *)
+{
+    std::ostringstream os;
+
+    os << version <<"2";
+
+    this->readData(os.str());
+
+    httprequest.perform();
+
+    std::string output;
+
+    while( writeData(output) >= 0 );
+}
+
+HttpSend::HttpSend(std::list<std::string> cookieslist)
+{
+    this->putCookies(cookieslist);
+}
+
+void HttpSend::run(void *)
+{
+
+    try{
+        std::ostringstream os ;
+
+        os<<version<<"3";
+
+        this->readData(os.str());
+
+        this->readData(indata);
+
+        httprequest.perform();
+
+        this->writeData(outdata);
+
     }catch ( curlpp::LogicError & e )
     {
         LOG<<"Logic Error";

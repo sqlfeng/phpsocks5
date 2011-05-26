@@ -15,6 +15,7 @@
 #include <curlpp/Easy.hpp>
 #include <curlpp/Exception.hpp>
 #include <sstream>
+#include <list>
 
 class minIni;
 
@@ -55,6 +56,8 @@ protected:
 
     std::string url;
 
+    std::list<std::string> cookies;
+
 public:
     HttpCmd();
     ~HttpCmd();
@@ -63,6 +66,10 @@ public:
 
     WriterMemoryClass mWriterChunk;
 
+    void putCookies(const std::list<std::string>  & cookielist);
+
+    std::list<std::string> getCookies();
+
     size_t readData(const std::string & s );
 
     size_t writeData(std::string &) ;
@@ -70,6 +77,10 @@ public:
     std::string encrypt(const std::string &);
 
     std::string decrypt(const std::string &);
+
+    std::string indata;
+
+    std::string outdata;
 
 };
 
@@ -91,4 +102,22 @@ public:
 
     void run(void *);
 
+};
+
+class HttpIdle:public HttpCmd,public TThreadPool::TJob
+{
+
+public :
+    HttpIdle(std::list<std::string> cookies);
+    void run(void *);
+};
+
+class HttpSend:public HttpCmd,public TThreadPool::TJob
+{
+
+public:
+
+    HttpSend(std::list<std::string> cookieslist);
+
+    void run(void *);
 };

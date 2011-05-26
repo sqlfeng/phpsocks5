@@ -25,13 +25,13 @@ public:
 
 int main()
 {
-    tp_init(50);
-    while(1)
-    {
+    tp_init(10);
+    // while(1)
+    //{
         HttpTunnel tunnel;
         tp_run(&tunnel,NULL,false);
         sleep(2);
-    }
+        //}
     tp_sync_all();
     tp_done();
 }

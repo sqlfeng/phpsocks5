@@ -15,6 +15,7 @@
 #include <curlpp/Options.hpp>
 #include <curlpp/Exception.hpp>
 #include "ServerSocket.h"
+#include <list>
 
 class minIni;
 
@@ -55,9 +56,11 @@ protected:
 
     minIni * ini;
 
+    std::list<std::string> Cookies;
+
     void handshake();
 
-    void phpconnect();
+    void phpconnect(); //cmd version 1
 
 };
 
