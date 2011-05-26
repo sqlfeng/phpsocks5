@@ -14,6 +14,7 @@
 #include "packet.h"
 #include <exception>
 #include "httpcmd.h"
+
 HttpTunnel::HttpTunnel()
 {
     ini = new minIni("properties.ini");
@@ -41,13 +42,24 @@ HttpTunnel::~HttpTunnel()
 
 void HttpTunnel::run(void *)
 {
-    // try{
-    phpconnect();
-    //}
-    //catch(...)
-    //{
-    //    LOG<<"Connection error";
-    //}
+    try{
+        phpconnect();
+
+        HttpSend send(Cookies);
+
+        socks >> send.indata ;
+        tp_run(&send);
+        tp_sync(&send);
+        socks << send.outdata;
+
+        HttpIdle idle(Cookies);
+        tp_run(&idle);
+
+    }
+    catch(...)
+    {
+        LOG<<"Connection error";
+    }
 }
 
 void HttpTunnel::handshake()
@@ -77,6 +89,7 @@ void HttpTunnel::handshake()
 
     host = request.getHost();
     port = request.getPort();
+
     cc_response response;
 
     if ( request.getCMD() != static_cast<cc_request::CMD> (0))
@@ -110,6 +123,8 @@ void HttpTunnel::phpconnect()
     tp_run(static_cast<HttpConnect*>(cmd));
 
     tp_sync(static_cast<HttpConnect*>(cmd));
+
+    Cookies = cmd->getCookies();
 
     LOG<<"Connection has been registered";
 }
