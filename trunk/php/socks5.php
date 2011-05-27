@@ -119,26 +119,83 @@ phpsocks5_log("process 6 $phpsid after decrypt postdata: " . phpsocks5_tohex($po
 if(!$postdata)
 {
 	phpsocks5_log("create table process");
-	if(!mysql_query("CREATE TABLE ${dbprefix}conning (  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,  sid VARCHAR(200) NOT NULL,  host VARCHAR(512) NOT NULL,  port INTEGER NOT NULL,  PRIMARY KEY (id))"))
+	$dbversion = 0;
+	if(!mysql_query("SELECT * FROM ${dbprefix}conning"))
+		$dbversion = 0;
+	else
 	{
-		if($debuginfo)
-			echo 'Create table 1 error.';
-		mysql_close();
-		exit;
+		$rslt = mysql_query("SELECT * FROM ${dbprefix}dbversion");
+		if(!$rslt)
+			$dbversion = 1;
+		else
+		{
+			$row = mysql_fetch_row($rslt);
+			if(!$row)
+			{
+				if($debuginfo)
+					echo 'create table process fetch dbversion row error.';
+				mysql_close();
+				exit;
+			}
+			$dbversion = $row[0];
+		} 
 	}
-	if(!mysql_query("CREATE TABLE ${dbprefix}sending (  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,  sid VARCHAR(200) NOT NULL,  cnt VARCHAR(8192) NOT NULL,  PRIMARY KEY (id))"))
+	if($dbversion == 0)
 	{
-		if($debuginfo)
-			echo 'Create table 2 error.';
-		mysql_close();
-		exit;
+		if(!mysql_query("CREATE TABLE ${dbprefix}conning (  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,  sid VARCHAR(200) NOT NULL,  host VARCHAR(512) NOT NULL,  port INTEGER NOT NULL,  PRIMARY KEY (id))"))
+		{
+			if($debuginfo)
+				echo 'Create table 1 error.';
+			mysql_close();
+			exit;
+		}
+		if(!mysql_query("CREATE TABLE ${dbprefix}sending (  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,  sid VARCHAR(200) NOT NULL,  cnt VARCHAR(8192) NOT NULL,  PRIMARY KEY (id))"))
+		{
+			if($debuginfo)
+				echo 'Create table 2 error.';
+			mysql_close();
+			exit;
+		}
+		if(!mysql_query("CREATE TABLE ${dbprefix}recving (  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,  sid VARCHAR(200) NOT NULL,  cnt VARCHAR(8192) NOT NULL,  PRIMARY KEY (id))"))
+		{
+			if($debuginfo)
+				echo 'Create table 3 error.';
+			mysql_close();
+			exit;
+		}
+		$dbversion = 1;
 	}
-	if(!mysql_query("CREATE TABLE ${dbprefix}recving (  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,  sid VARCHAR(200) NOT NULL,  cnt VARCHAR(8192) NOT NULL,  PRIMARY KEY (id))"))
+	if($dbversion == 1)
 	{
-		if($debuginfo)
-			echo 'Create table 3 error.';
-		mysql_close();
-		exit;
+		if(!mysql_query("ALTER TABLE ${dbprefix}sending CHANGE COLUMN cnt cnt MEDIUMTEXT NOT NULL  ;"))
+		{
+			if($debuginfo)
+				echo 'Alter table 2 error.';
+			mysql_close();
+			exit;
+		}
+		if(!mysql_query("ALTER TABLE ${dbprefix}recving CHANGE COLUMN cnt cnt MEDIUMTEXT NOT NULL  ;"))
+		{
+			if($debuginfo)
+				echo 'Alter table 3 error.';
+			mysql_close();
+			exit;
+		}
+		if(!mysql_query("CREATE TABLE ${dbprefix}dbversion (  dbversion INT NOT NULL )"))
+		{
+			if($debuginfo)
+				echo 'Create table 4 error.';
+			mysql_close();
+			exit;
+		}
+		if(!mysql_query("INSERT INTO ${dbprefix}dbversion VALUES (2)"))
+		{
+			if($debuginfo)
+				echo 'Init table 4 error.';
+			mysql_close();
+			exit;
+		}
+		$dbversion = 2;
 	}
 	mysql_close();
 	if($debuginfo)
