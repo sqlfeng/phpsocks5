@@ -16,8 +16,43 @@
 #include <curlpp/Exception.hpp>
 #include <sstream>
 #include <list>
+#include <vector>
 
 class minIni;
+
+struct MyCookie
+{
+    std::string name;
+    std::string value;
+    std::string domain;
+    std::string path;
+    time_t expires;
+    bool tail;
+    bool secure;
+
+    friend std::ostream & operator<<(std::ostream &strm, const MyCookie &cook);
+
+};
+
+struct CookieHandle{
+
+public:
+
+    std::list<MyCookie> cookielist;
+
+    MyCookie MakeCookie(const std::string &str_cookie);
+
+protected:
+
+    std::vector<std::string> & split_cookie_str(const std::string &str, std::vector<std::string> &in);
+
+    std::vector<std::string> splitCookieStr(const std::string &str);
+
+    std::vector<std::string> &splitCookieStr(const std::string &str, std::vector<std::string> &in);
+
+    int StrToInt(const std::string &str);
+
+};
 
 class WriterMemoryClass
 {
@@ -57,6 +92,8 @@ protected:
     std::string url;
 
     std::list<std::string> cookies;
+
+//    CookieHandle cookiehandle;
 
 public:
     HttpCmd();
