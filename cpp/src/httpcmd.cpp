@@ -19,6 +19,74 @@
 
 #define MAX_FILE_LENGTH 20000
 
+std::ostream &
+operator<<(std::ostream &strm, const MyCookie &cook)
+{
+    /*strm << "Cookie: '" << cook.name << "' (secure: " << YesNo(cook.secure) << ", tail: "
+      << YesNo(cook.tail) << ") for domain: '" << cook.domain << "', "
+      << "path: '" << cook.path << "'.\n";
+      strm << "Value: '" << cook.value << "'.\n";
+      strm << "Expires: '" << ctime(&cook.expires) << "'.\n";
+    */
+    strm <<"Set-Cookie: "<< cook.name<<"="<<cook.value<<"; path="<< cook.path<<"; domain="<<cook.domain;
+    //strm <<"Set-Cookie: "<< cook.name<<"="<<cook.value<<"; path="<< cook.path;
+    return strm;
+}
+
+std::vector<std::string> &
+CookieHandle:: split_cookie_str(const std::string &str, std::vector<std::string> &in)
+{
+    std::string part;
+
+    std::istringstream strm(str);
+    while (getline(strm, part, '\t'))
+        in.push_back(part);
+
+    return in;
+}
+
+std::vector<std::string>
+CookieHandle::splitCookieStr(const std::string &str)
+{
+    std::vector<std::string> split;
+    split_cookie_str(str, split);
+    return split;
+}
+
+std::vector<std::string> &
+CookieHandle::splitCookieStr(const std::string &str, std::vector<std::string> &in)
+{
+    return split_cookie_str(str, in);
+}
+
+MyCookie
+CookieHandle::MakeCookie(const std::string &str_cookie)
+{
+    std::vector<std::string> vC = splitCookieStr(str_cookie);
+    MyCookie cook;
+
+    cook.domain = vC[0];
+    cook.tail = vC[1] == "TRUE";
+    cook.path = vC[2];
+    cook.secure = vC[3] == "TRUE";
+    cook.expires = StrToInt(vC[4]);
+    cook.name = vC[5];
+    cook.value = vC[6];
+    return cook;
+}
+
+
+int CookieHandle::StrToInt(const std::string &str)
+{
+    std::istringstream strm(str);
+    int i = 0;
+    if (!(strm >> i)) {
+        throw curlpp::RuntimeError("Unable to convert string '" + str + "' to integer!");
+    }
+    return i;
+}
+
+
 WriterMemoryClass::WriterMemoryClass()
 {
     this->m_pBuffer = NULL;
@@ -139,6 +207,7 @@ size_t HttpCmd::readData(const std::string & s)
 
 size_t HttpCmd::writeData(std::string & s )
 {
+    LOG<<"Start to Read Data";
     try {
         s.clear();
         mWriterChunk.write(s);
@@ -172,6 +241,7 @@ std::string HttpCmd::decrypt( const std::string & s)
 
 void HttpCmd::putCookies(const std::list<std::string> & cookieslist)
 {
+    LOG<<"Start to Put Cookies to Http Head";
     if ( cookieslist.empty() )
     {
         LOG<< "Cookie list empty!";
@@ -179,11 +249,14 @@ void HttpCmd::putCookies(const std::list<std::string> & cookieslist)
     }
     else
     {
+        LOG<<"Cookie Count is :"<< cookieslist.size();
         try{
-            for( std::list<std::string>::const_iterator it = cookieslist.begin(); it!= cookies.end(); it ++)
+
+            for( std::list<std::string>::const_iterator it = cookieslist.begin(); it!= cookieslist.end(); it ++)
             {
                 httprequest.setOpt(curlpp::options::CookieList(*it));
             }
+
         }catch ( curlpp::LogicError & e )
         {
             LOG<<"Logic Error";
@@ -252,12 +325,29 @@ void HttpConnect::run(void *)
             << curlpp::infos::ResponseCode::get(httprequest)
             << std::endl;
 
-        curlpp::infos::CookieList::get(httprequest, cookies);
+        std::list<std::string> cookieList;
+        curlpp::infos::CookieList::get(httprequest, cookieList);
+
+        for( std::list<std::string>::const_iterator it = cookieList.begin(); it!= cookieList.end(); it ++)
+        {
+            std::ostringstream cookos;
+            cookos<< cookiehandler.MakeCookie(*it);
+            cookies.push_back(cookos.str());
+        }
 
         if ( cookies.empty())
         {
             LOG<<"Cookie empty";
         }
+        else
+        {
+            for( std::list<std::string>::const_iterator it = cookies.begin(); it != cookies.end(); it ++)
+            {
+                std::cout<<*it<<std::endl;
+            }
+        }
+
+        LOG<<"Cookie size is "<<cookies.size();
 
     }catch ( curlpp::LogicError & e )
     {
@@ -304,11 +394,9 @@ void HttpSend::run(void *)
     try{
         std::ostringstream os ;
 
-        os<<version<<"3";
+        os<<version<<"3" << indata;
 
         this->readData(os.str());
-
-        this->readData(indata);
 
         httprequest.perform();
 

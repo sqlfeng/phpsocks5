@@ -38,7 +38,7 @@ struct CookieHandle{
 
 public:
 
-    std::list<MyCookie> cookielist;
+    //std::list<MyCookie> cookielist;
 
     MyCookie MakeCookie(const std::string &str_cookie);
 
@@ -93,12 +93,13 @@ protected:
 
     std::list<std::string> cookies;
 
-//    CookieHandle cookiehandle;
+    CookieHandle cookiehandler;
 
 public:
     HttpCmd();
     ~HttpCmd();
     cURLpp::Cleanup cleanup;
+
     cURLpp::Easy httprequest;
 
     WriterMemoryClass mWriterChunk;

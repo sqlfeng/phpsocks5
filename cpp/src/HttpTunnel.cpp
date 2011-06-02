@@ -49,12 +49,23 @@ void HttpTunnel::run(void *)
 
         socks >> send.indata ;
         tp_run(&send);
-        tp_sync(&send);
+        // tp_sync(&send);
+        LOG<<"Wxjeaecn: "<<send.outdata;
         socks << send.outdata;
 
-        HttpIdle idle(Cookies);
-        tp_run(&idle);
+//        HttpIdle idle(Cookies);
+//        tp_run(&idle);
 
+    }
+    catch ( curlpp::LogicError & e )
+    {
+        LOG<<"Logic Error";
+        std::cout << e.what() << std::endl;
+    }
+    catch ( curlpp::RuntimeError & e )
+    {
+        LOG<<"RuntimeError";
+        std::cout << e.what() << std::endl;
     }
     catch(...)
     {
