@@ -19,7 +19,6 @@
 
 #define MAX_FILE_LENGTH 20000
 
-
 WriterMemoryClass::WriterMemoryClass()
 {
     this->m_pBuffer = NULL;
