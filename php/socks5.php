@@ -259,7 +259,7 @@ elseif($postdata[2] == "2")
 		if(feof($rmtskt))
 			phpsocks5_http_500('feof');
 		phpsocks5_log("background process 8 $phpsid");
-		$cnt = fread($rmtskt, 4096);
+		$cnt = fread($rmtskt, 1048576);
 		phpsocks5_log("background process 9 $phpsid");
 		if($cnt)
 		{
