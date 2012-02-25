@@ -1,6 +1,8 @@
 <?php
 $secretkey = "gnuwisy78346g86s786d87f6782hjdkhkjchzxkjhkdjhdfhi2uq3yrsyidyfuishyidhyichyizxihyiuhyfiu89347979834ghe987t898d7uf897s89j";
 $debuginfo = TRUE;	//	TRUE or FALSE
+$send_buf_cnt = 8;
+$recv_buf_cnt = 8;
 
 $localhost = 'localhost';
 $localport = 80;
@@ -121,7 +123,7 @@ elseif($postdata[2] == "2")
 	$store_port_req = "POST $localurl HTTP/1.1\r\nHost: $hostheader\r\nCookie: $sess_cookie\r\nContent-Length: $localportlen\r\n\r\n$localport";
 	if(!socket_send($httpsocket, $store_port_req, strlen($store_port_req), 0))
 		phpsocks5_http_500('background process socket_send error');
-	if(!socket_recvfrom($local_socket, $buf, 65536, 0, $peer_host, $peer_port))
+	if(!socket_recvfrom($local_socket, $buf, 65535, 0, $peer_host, $peer_port))
 		phpsocks5_http_500('background process socket_recvfrom 1 error');
 	$remote_host = strtok($buf, ":");
 	$remote_port = strtok(":") / 1;
@@ -133,36 +135,92 @@ elseif($postdata[2] == "2")
 		phpsocks5_http_500('background process socket_connect_hostname remote error');
 	if(!socket_sendto($local_socket, '1', 1, 0, $peer_host, $peer_port))
 		phpsocks5_http_500('background process socket_sendto peer error');
-	$bufque = "";
+	$send_bufque = array();
+	$send_peer_host = NULL;
+	$send_peer_port = 0;
+	$recv_bufque = array();
+	$recv_peer_host = NULL;
+	$recv_peer_port = 0;
 	while(TRUE)
 	{
 		phpsocks5_log("background process 3");
-		$read_sockets = array($local_socket, $remote_socket);
-		$write_sockets = MULL;
-		$except_sockets = NULL;
+		$read_sockets = array($local_socket);
+		if(count($recv_bufque) < $recv_buf_cnt)
+			$read_sockets[] = $remote_socket;
+		$write_sockets = array();
+		if(count($send_bufque) > 0)
+			$write_sockets[] = $remote_socket;
+		$except_sockets = array();
 		if(!socket_select($read_sockets, $write_sockets, $except_sockets, NULL))
 			hpsocks5_http_500('background process socket_select error');
 		foreach($read_sockets as $read_socket)
 		{
+			$buf = NULL;
 			if($read_socket === $local_socket)
 			{
-				$buf = NULL;
-				if(!socket_recvfrom($local_socket, $buf, 65536, 0, $peer_host, $peer_port))
+				if(!socket_recvfrom($local_socket, $buf, 65535, 0, $peer_host, $peer_port))
 					phpsocks5_http_500('background process socket_recvfrom 2 error');
 				if($buf[0] == "1")
 				{
+					$send_peer_host = $peer_host;
+					$send_peer_port = $peer_port;
 					$buf = substr($buf, 1);
-					if(!socket_send($remote_socket, $buf, strlen($buf), 0))
-						phpsocks5_http_500('background process socket_send error');
+					$send_bufque[] = $buf;
+					if(count($send_bufque) < $send_buf_cnt)
+					{
+						if(!socket_sendto($local_socket, '1', 1, 0, $peer_host, $peer_port))
+							phpsocks5_http_500('background process socket_sendto 1 error');
+						$send_peer_port = 0;
+					}
 				}
 				elseif($buf[0] == "2")
 				{
-					
-					$bufque = "";
+					$recv_peer_host = $peer_host;
+					$recv_peer_port = $peer_port;
+					if(count($recv_bufque) > 0)
+					{
+						while(count($recv_bufque) > 0)
+						{
+							$buf = '1' . array_shift($recv_bufque);
+							if(!socket_sendto($local_socket, $buf, strlen($buf), 0, $peer_host, $peer_port))
+								phpsocks5_http_500('background process socket_sendto 2 error');
+						}
+						if(!socket_sendto($local_socket, '1', 1, 0, $peer_host, $peer_port))
+							phpsocks5_http_500('background process socket_sendto 1 error');
+						$recv_peer_port = 0;
+					}
 				}
 			}
 			elseif($read_socket === $remote_socket)
 			{
+				if(!socket_recv($remote_socket, $buf, 65534, 0))
+					phpsocks5_http_500('background process socket_recv 1 error');
+				$recv_bufque[] = $buf;
+				if($recv_peer_port != 0)
+				{
+					while(count($recv_bufque) > 0)
+					{
+						$buf = '1' . array_shift($recv_bufque);
+						if(!socket_sendto($local_socket, $buf, strlen($buf), 0, $peer_host, $peer_port))
+							phpsocks5_http_500('background process socket_sendto 2 error');
+					}
+					if(!socket_sendto($local_socket, '1', 1, 0, $peer_host, $peer_port))
+						phpsocks5_http_500('background process socket_sendto 1 error');
+					$recv_peer_port = 0;
+				}
+			}
+		}
+		foreach($write_sockets as $write_socket)
+		{
+			if($write_socket === $remote_socket)
+			{
+				$sendback = FALSE;
+				if(count($send_bufque) == $send_buf_cnt)
+					$sendback = TRUE;
+				$buf = array_shift($send_bufque);
+				if(!socket_send($remote_socket, $buf, strlen($buf), 0))
+					phpsocks5_http_500('background process socket_send error');
+				if($sendback)
 			}
 		}
 		phpsocks5_log("background process 4");
