@@ -141,14 +141,15 @@ elseif($postdata[2] == "2")
 	$recv_bufque = array();
 	$recv_peer_host = NULL;
 	$recv_peer_port = 0;
+	$remote_closed = FALSE;
 	while(TRUE)
 	{
 		phpsocks5_log("background process 3");
 		$read_sockets = array($local_socket);
-		if(count($recv_bufque) < $recv_buf_cnt)
+		if(!$remote_closed && count($recv_bufque) < $recv_buf_cnt)
 			$read_sockets[] = $remote_socket;
 		$write_sockets = array();
-		if(count($send_bufque) > 0)
+		if(!$remote_closed && count($send_bufque) > 0)
 			$write_sockets[] = $remote_socket;
 		$except_sockets = array();
 		if(!socket_select($read_sockets, $write_sockets, $except_sockets, NULL))
@@ -166,10 +167,16 @@ elseif($postdata[2] == "2")
 					$send_peer_port = $peer_port;
 					$buf = substr($buf, 1);
 					$send_bufque[] = $buf;
-					if(count($send_bufque) < $send_buf_cnt)
+					if($remote_closed)
+					{
+						if(!socket_sendto($local_socket, '0', 1, 0, $peer_host, $peer_port))
+							phpsocks5_http_500('background process socket_sendto 1 error');
+						$send_peer_port = 0;
+					}
+					elseif(count($send_bufque) < $send_buf_cnt)
 					{
 						if(!socket_sendto($local_socket, '1', 1, 0, $peer_host, $peer_port))
-							phpsocks5_http_500('background process socket_sendto 1 error');
+							phpsocks5_http_500('background process socket_sendto 2 error');
 						$send_peer_port = 0;
 					}
 				}
@@ -183,18 +190,35 @@ elseif($postdata[2] == "2")
 						{
 							$buf = '1' . array_shift($recv_bufque);
 							if(!socket_sendto($local_socket, $buf, strlen($buf), 0, $peer_host, $peer_port))
-								phpsocks5_http_500('background process socket_sendto 2 error');
+								phpsocks5_http_500('background process socket_sendto 3 error');
 						}
-						if(!socket_sendto($local_socket, '1', 1, 0, $peer_host, $peer_port))
-							phpsocks5_http_500('background process socket_sendto 1 error');
+						if($remote_closed)
+						{
+							if(!socket_sendto($local_socket, '0', 1, 0, $peer_host, $peer_port))
+								phpsocks5_http_500('background process socket_sendto 4 error');
+						}
+						else
+						{
+							if(!socket_sendto($local_socket, '1', 1, 0, $peer_host, $peer_port))
+								phpsocks5_http_500('background process socket_sendto 5 error');
+						}
+						$recv_peer_port = 0;
+					}
+					elseif($remote_closed)
+					{
+						if(!socket_sendto($local_socket, '0', 1, 0, $peer_host, $peer_port))
+							phpsocks5_http_500('background process socket_sendto 6 error');
 						$recv_peer_port = 0;
 					}
 				}
 			}
 			elseif($read_socket === $remote_socket)
 			{
-				if(!socket_recv($remote_socket, $buf, 65534, 0))
-					phpsocks5_http_500('background process socket_recv 1 error');
+				if(!socket_recv($remote_socket, $buf, 65000, 0))
+				{
+					$remote_closed = TRUE;
+					break;
+				}
 				$recv_bufque[] = $buf;
 				if($recv_peer_port != 0)
 				{
@@ -202,10 +226,18 @@ elseif($postdata[2] == "2")
 					{
 						$buf = '1' . array_shift($recv_bufque);
 						if(!socket_sendto($local_socket, $buf, strlen($buf), 0, $peer_host, $peer_port))
-							phpsocks5_http_500('background process socket_sendto 2 error');
+							phpsocks5_http_500('background process socket_sendto 7 error');
 					}
-					if(!socket_sendto($local_socket, '1', 1, 0, $peer_host, $peer_port))
-						phpsocks5_http_500('background process socket_sendto 1 error');
+					if($remote_closed)
+					{
+						if(!socket_sendto($local_socket, '0', 1, 0, $peer_host, $peer_port))
+							phpsocks5_http_500('background process socket_sendto 8 error');
+					}
+					else
+					{
+						if(!socket_sendto($local_socket, '1', 1, 0, $peer_host, $peer_port))
+							phpsocks5_http_500('background process socket_sendto 9 error');
+					}
 					$recv_peer_port = 0;
 				}
 			}
@@ -214,74 +246,25 @@ elseif($postdata[2] == "2")
 		{
 			if($write_socket === $remote_socket)
 			{
-				$sendback = FALSE;
-				if(count($send_bufque) == $send_buf_cnt)
-					$sendback = TRUE;
 				$buf = array_shift($send_bufque);
 				if(!socket_send($remote_socket, $buf, strlen($buf), 0))
-					phpsocks5_http_500('background process socket_send error');
-				if($sendback)
+				{
+					$remote_closed = TRUE;
+					break;
+				}
+				$recv_peer_port = 0;
 			}
 		}
-		phpsocks5_log("background process 4");
-		$cnt = fread($rmtskt, 1048576);
-		phpsocks5_log("background process 9 $phpsid");
-		if($cnt)
-		{
-			phpsocks5_log("background process 10 $phpsid fread: " . phpsocks5_tohex($cnt));
-			if(!mysql_query("INSERT INTO ${dbprefix}recving (sid, cnt) VALUES ('" . $phpsid . "', '" . base64_encode($cnt) . "')"))
-				phpsocks5_http_500('mysql_query INSERT error');
-			phpsocks5_usleep(0);
-			phpsocks5_log("background process 11 $phpsid");
-			$noop = false;
-		}
-		phpsocks5_log("background process 12 $phpsid");
-		phpsocks5_usleep($inv);
-		phpsocks5_log("background process 13 $phpsid");
-		$rslt = mysql_query("SELECT id, cnt FROM ${dbprefix}sending WHERE sid = '" . $phpsid . "' ORDER BY id ASC LIMIT 1");
-		if(!$rslt)
-			phpsocks5_http_500('mysql_query SELECT error');
-		$row = mysql_fetch_row($rslt);
-		phpsocks5_usleep(0);
-		phpsocks5_log("background process 14 $phpsid");
-		if($row)
-		{
-			$noop = false;
-			phpsocks5_log("background process 15 $phpsid");
-			mysql_query("DELETE FROM ${dbprefix}sending WHERE id = $row[0]");
-			phpsocks5_usleep(0);
-			phpsocks5_log("background process 16 $phpsid");
-			if(!$row[1])
-				phpsocks5_http_500('break');
-			$cnt = base64_decode($row[1]);
-			phpsocks5_log("background process 17 $phpsid fwrite: " . phpsocks5_tohex($cnt));
-			if(!fwrite($rmtskt, $cnt))
-				phpsocks5_http_500('fwrite error');
-			phpsocks5_log("background process 18 $phpsid");
-		}
-		if($noop)
-		{
-			phpsocks5_log("background process 19 $phpsid");
-			$inv += $invstep;
-			if($inv > $invmax)
-				$inv = $invmax;
-		}
-		else
-		{
-			phpsocks5_log("background process 20 $phpsid");
-			set_time_limit(30);
-			phpsocks5_log("background process 21 $phpsid");
-			$inv = 0;
-		}
-		phpsocks5_usleep($inv);
-		phpsocks5_log("background process 22 $phpsid");
 	}
+	phpsocks5_log("background process 4");
 }
 elseif($postdata[2] == "3")
 {
-	phpsocks5_log("send process 1 $phpsid");
-	if(!mysql_query("INSERT INTO ${dbprefix}sending (sid, cnt) VALUES ('" . $phpsid . "', '" . base64_encode(substr($postdata, 3)) . "')"))
-		phpsocks5_http_500('mysql_query INSERT INTO error');
+	phpsocks5_log("saveport process 1");
+	if(!session_start())
+		phpsocks5_http_500('saveport process session_start error');
+	$_SESSION['port'] = substr($postdata, 3);
+	phpsocks5_log("saveport process 2");
 }
 elseif($postdata[2] == "4")
 {
