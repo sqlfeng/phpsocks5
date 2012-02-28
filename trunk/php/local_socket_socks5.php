@@ -118,7 +118,7 @@ elseif($postdata[2] == "2")
 		phpsocks5_http_500('background process socket_create 2 error');
 	if(!socket_connect_hostname($localhost, $localport))
 		phpsocks5_http_500('background process socket_connect_hostname local error');
-	$localport = "3" . "$localport";
+	$localport = phpsocks5_encrypt($version . "3" . "$localport");
 	$localportlen = strlen($localport);
 	$store_port_req = "POST $localurl HTTP/1.1\r\nHost: $hostheader\r\nCookie: $sess_cookie\r\nContent-Length: $localportlen\r\n\r\n$localport";
 	if(!socket_send($httpsocket, $store_port_req, strlen($store_port_req), 0))
@@ -268,51 +268,44 @@ elseif($postdata[2] == "3")
 }
 elseif($postdata[2] == "4")
 {
-	phpsocks5_log("receive process 1 $phpsid");
-	$inv = 0;
-	while(true)
-	{
-		phpsocks5_log("receive process 2 $phpsid");
-		$rslt = mysql_query("SELECT id, cnt FROM ${dbprefix}recving WHERE sid = '" . $phpsid . "' ORDER BY id ASC LIMIT 1");
-		if(!$rslt)
-			phpsocks5_http_500('mysql_query SELECT error');
-		phpsocks5_log("receive process 3 $phpsid");
-		$row = mysql_fetch_row($rslt);
-		phpsocks5_usleep(0);
-		if($row)
-		{
-			phpsocks5_log("receive process 4 $phpsid");
-			mysql_query("DELETE FROM ${dbprefix}recving WHERE id = $row[0]");
-			phpsocks5_usleep(0);
-			if($row[1])
-			{
-				$cnt = base64_decode($row[1]);
-				phpsocks5_log("receive process 5 $phpsid echo: " . phpsocks5_tohex($cnt));
-				echo $prefix . phpsocks5_encrypt($cnt) . $postfix;
-			}
-			else
-				phpsocks5_http_500('break');
-			phpsocks5_log("receive process 6 $phpsid");
-			break;
-		}
-		phpsocks5_log("receive process 7 $phpsid");
-		$inv += $invstep;
-		if($inv > $invmax)
-			$inv = $invmax;
-		phpsocks5_log("receive process 8 $phpsid");
-		phpsocks5_usleep($inv);
-		phpsocks5_log("receive process 9 $phpsid");
-	}
+	phpsocks5_log("readport process 1");
+	if(!session_start())
+		phpsocks5_http_500('readport process session_start error');
+	echo phpsocks5_decrypt($_SESSION['port']);
+	phpsocks5_log("readport process 2");
 }
 elseif($postdata[2] == "5")
 {
-	phpsocks5_log("close process 1 $phpsid");
-	mysql_query("INSERT INTO ${dbprefix}sending (sid, cnt) VALUES ('" . $phpsid . "', '')");
-	mysql_query("INSERT INTO ${dbprefix}recving (sid, cnt) VALUES ('" . $phpsid . "', '')");
-	phpsocks5_log("close process 2 $phpsid");
+	phpsocks5_log("connect process 1");
+	$localport = strtok(substr($postdata, 3), ':') / 1;
+	$remotehost = strtok(':');
+	$remoteport = strtok(':');
+	phpsocks5_log("connect process 2");
+	$local_socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+	if(!$local_socket)
+		phpsocks5_http_500('connect process socket_create error');
+	$buf = "$remotehost:$remoteport";
+	if(!socket_sendto($local_socket, $buf, strlen(buf), 0, '127.0.0.1', $localport))
+		phpsocks5_http_500('connect process socket_sendto error');
+	$buf = NULL;
+	if(!socket_recvfrom($local_socket, $buf, 65500, 0, $peer_host, $peer_port))
+		phpsocks5_http_500('connect process socket_recvfrom error');
+	echo phpsocks5_decrypt($buf);
+	phpsocks5_log("connect process 3");
+}
+elseif($postdata[2] == "6")
+{
+	phpsocks5_log("send process 1");
+}
+elseif($postdata[2] == "7")
+{
+	phpsocks5_log("recv process 1");
+}
+elseif($postdata[2] == "8")
+{
+	phpsocks5_log("close process 1");
 }
 
 phpsocks5_log("process 7");
 
-mysql_close();
 ?>
