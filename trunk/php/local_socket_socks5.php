@@ -296,10 +296,41 @@ elseif($postdata[2] == "5")
 elseif($postdata[2] == "6")
 {
 	phpsocks5_log("send process 1");
+	$buf = substr($postdata, 3);
+	$port = strtok($buf, ';');
+	$buf = substr($buf, strlen($post) + 1);
+	$port = $port / 1;
+	$local_socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+	if(!$local_socket)
+		phpsocks5_http_500('send process socket_create error');
+	while(strlen($buf) > 0)
+	{
+		$packet = '1' . substr($buf, 0, 65000);
+		$buf = substr($buf, 65000);
+		if(!socket_sendto($local_socket, $buf, strlen($buf), 0, '127.0.0.1', $port))
+			phpsocks5_http_500('send process socket_sendto error');
+		$buf = NULL;
+		if(!socket_recvfrom($local_socket, $buf, 65500, 0, $peer_host, $peer_port))
+			phpsocks5_http_500('send process socket_recvfrom error');
+		if($buf[0] != "1")
+			phpsocks5_http_500('send process eof');
+	}
 }
 elseif($postdata[2] == "7")
 {
 	phpsocks5_log("recv process 1");
+	$port = substr($postdata, 3) / 1;
+	$local_socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+	if(!$local_socket)
+		phpsocks5_http_500('recv process socket_create error');
+	while(TRUE)
+	{
+		if(!socket_sendto($local_socket, '2', 1, 0, '127.0.0.1', $port))
+			phpsocks5_http_500('recv process socket_sendto error');
+		$buf = NULL;
+		if(!socket_recvfrom($local_socket, $buf, 65500, 0, $peer_host, $peer_port))
+			phpsocks5_http_500('recv process socket_recvfrom error');
+	}
 }
 elseif($postdata[2] == "8")
 {
